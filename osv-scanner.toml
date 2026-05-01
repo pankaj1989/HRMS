@@ -1,0 +1,77 @@
+# OSV-Scanner ignore list.
+# Each entry MUST carry a justification and a hard expiration date.
+# After the expiration the advisory re-fails the build, forcing remediation.
+#
+# All ignores expire 2026-06-30 (60 days from P1.1.5 landing on 2026-05-01).
+# Two groups, both deferred to follow-up sub-phases:
+#
+#   Group A — multer 1.x (P1.1.5b): migrating to multer 2.x is a breaking API
+#   rewrite. Tracked separately so the migration can get its own test coverage.
+#
+#   Group B — major bumps explicitly out of scope of P1.1.5 per spec:
+#     - @nestjs/core 11.x  (P1.1.5c NestJS-major migration)
+#     - vite 6.x           (P1.1.5d vite/vitest-major migration)
+#     - file-type 21.x     (transitive of fastify-multipart; bumped together
+#                           with NestJS 11.x or via override after testing)
+#
+# All Group B advisories are CVSS 6.3 or below (no Critical, no High);
+# acceptable to defer for a 60-day window.
+
+# ---- Group A: multer 1.x advisories ----
+
+[[IgnoredVulns]]
+id = "GHSA-44fp-w29j-9vj5"
+ignoreUntil = 2026-06-30
+reason = "multer 1.x; scheduled for P1.1.5b multer 2.x migration"
+
+[[IgnoredVulns]]
+id = "GHSA-4pg4-qvpc-4q3h"
+ignoreUntil = 2026-06-30
+reason = "multer 1.x; scheduled for P1.1.5b multer 2.x migration"
+
+[[IgnoredVulns]]
+id = "GHSA-5528-5vmv-3xc2"
+ignoreUntil = 2026-06-30
+reason = "multer 1.x; scheduled for P1.1.5b multer 2.x migration"
+
+[[IgnoredVulns]]
+id = "GHSA-fjgf-rc76-4x9p"
+ignoreUntil = 2026-06-30
+reason = "multer 1.x; scheduled for P1.1.5b multer 2.x migration"
+
+[[IgnoredVulns]]
+id = "GHSA-g5hg-p3ph-g8qg"
+ignoreUntil = 2026-06-30
+reason = "multer 1.x; scheduled for P1.1.5b multer 2.x migration"
+
+[[IgnoredVulns]]
+id = "GHSA-v52c-386h-88mc"
+ignoreUntil = 2026-06-30
+reason = "multer 1.x; scheduled for P1.1.5b multer 2.x migration"
+
+[[IgnoredVulns]]
+id = "GHSA-xf7r-hgr6-v32p"
+ignoreUntil = 2026-06-30
+reason = "multer 1.x; scheduled for P1.1.5b multer 2.x migration"
+
+# ---- Group B: out-of-scope majors (CVSS <= 6.3) ----
+
+[[IgnoredVulns]]
+id = "GHSA-36xv-jgw5-4q75"
+ignoreUntil = 2026-06-30
+reason = "@nestjs/core 10.4.22 -> 11.1.18 is a major bump; scheduled for P1.1.5c NestJS-major migration"
+
+[[IgnoredVulns]]
+id = "GHSA-5v7r-6r5c-r473"
+ignoreUntil = 2026-06-30
+reason = "file-type 20.4.1 -> 21.3.1 is a major bump (transitive of fastify-multipart); scheduled with P1.1.5c"
+
+[[IgnoredVulns]]
+id = "GHSA-j47w-4g3g-c36v"
+ignoreUntil = 2026-06-30
+reason = "file-type 20.4.1 -> 21.3.2 is a major bump (transitive of fastify-multipart); scheduled with P1.1.5c"
+
+[[IgnoredVulns]]
+id = "GHSA-4w7w-66w2-5vf9"
+ignoreUntil = 2026-06-30
+reason = "vite 5.4.21 -> 6.4.2 is a major bump; scheduled for P1.1.5d vite/vitest-major migration"
