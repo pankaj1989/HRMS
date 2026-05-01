@@ -12,23 +12,26 @@
       "persistent": true
     },
     "lint": {
-      "outputs": []
+      "inputs": ["src/**", "app/**", "test/**", "tests/**", "eslint.config.*", ".eslintrc*", "package.json", "tsconfig*.json"]
     },
     "type": {
       "dependsOn": ["^build"],
-      "outputs": ["*.tsbuildinfo"]
+      "outputs": ["*.tsbuildinfo"],
+      "inputs": ["src/**", "app/**", "test/**", "tests/**", "tsconfig*.json", "package.json"]
     },
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "test/**", "tests/**", "vitest.config.*", "package.json"]
+      "inputs": ["src/**", "test/**", "tests/**", "vitest.config.*", "jest.config.*", "package.json"]
     },
     "test:unit": {
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "test/**", "tests/**", "vitest.config.*", "jest.config.*", "package.json"]
     },
     "test:e2e": {
       "dependsOn": ["build"],
-      "outputs": ["playwright-report/**", "test-results/**"]
+      "outputs": ["playwright-report/**", "test-results/**"],
+      "inputs": ["src/**", "app/**", "e2e/**", "test/**", "tests/**", "playwright.config.*", "jest-e2e.json", "package.json"]
     },
     "clean": {
       "cache": false
