@@ -1,8 +1,7 @@
 {
   "extends": "@hrms/config/typescript/nest.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "baseUrl": "./",
     "paths": {
       "@app/*": ["src/*"]

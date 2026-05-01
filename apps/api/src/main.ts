@@ -15,7 +15,7 @@ async function bootstrap(): Promise<void> {
   await app.listen(port);
 
   const logger = new Logger('Bootstrap');
-  logger.log(`HRMS API listening on http://localhost:${port}`);
+  logger.log(`HRMS API listening on http://localhost:${String(port)}`);
 }
 
 void bootstrap();
