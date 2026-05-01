@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "locale": "en",
+    "name": "English"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

@@ -1,0 +1,4 @@
+# Placeholder. Will be replaced with a generated pubspec.yaml in Phase 8.
+name: hrms_api_client
+description: HRMS Dart client (auto-generated from OpenAPI)
+version: 0.0.0

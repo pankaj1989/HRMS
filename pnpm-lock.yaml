@@ -184,6 +184,15 @@ importers:
         specifier: 5.6.2
         version: 5.6.2
 
+  packages/api-client-ts:
+    devDependencies:
+      '@hrms/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+
   packages/config:
     dependencies:
       '@eslint/js':
@@ -198,6 +207,69 @@ importers:
       typescript-eslint:
         specifier: 8.8.0
         version: 8.8.0(eslint@9.12.0(jiti@2.6.1))(typescript@5.6.2)
+
+  packages/contracts:
+    devDependencies:
+      '@hrms/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+
+  packages/crypto:
+    devDependencies:
+      '@hrms/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+
+  packages/db:
+    devDependencies:
+      '@hrms/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+
+  packages/domain:
+    devDependencies:
+      '@hrms/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+
+  packages/i18n:
+    devDependencies:
+      '@hrms/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+
+  packages/rules-engine:
+    devDependencies:
+      '@hrms/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+
+  packages/ui:
+    devDependencies:
+      '@hrms/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
 
 packages:
 

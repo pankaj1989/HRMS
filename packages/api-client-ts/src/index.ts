@@ -1,0 +1,3 @@
+// @hrms/api-client-ts — populated in later phases.
+// This file exists so Turborepo can resolve the workspace package.
+export {};
