@@ -10,6 +10,11 @@ out/
 .turbo/
 *.tsbuildinfo
 
+# Next.js auto-generated reference files
+# (regenerated on each `next dev`/`next build`; should not be tracked
+# per https://nextjs.org/docs/app/api-reference/config/typescript)
+next-env.d.ts
+
 # Test outputs
 coverage/
 .nyc_output/
