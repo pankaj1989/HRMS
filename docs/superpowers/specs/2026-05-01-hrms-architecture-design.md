@@ -1,13 +1,13 @@
 # HRMS — Architecture Design
 
-| Field | Value |
-|---|---|
-| Status | **Approved (brainstorming phase)** |
-| Created | 2026-05-01 |
-| Author | Founder (solo + AI-assisted) |
-| Source spec | `/Users/pj/Documents/hrms/spec/` (10 modules + appendix) |
-| Brainstorming transcript | this conversation, 2026-04-30 → 2026-05-01 |
-| Next step | Implementation plan via `superpowers:writing-plans` |
+| Field                    | Value                                                    |
+| ------------------------ | -------------------------------------------------------- |
+| Status                   | **Approved (brainstorming phase)**                       |
+| Created                  | 2026-05-01                                               |
+| Author                   | Founder (solo + AI-assisted)                             |
+| Source spec              | `/Users/pj/Documents/hrms/spec/` (10 modules + appendix) |
+| Brainstorming transcript | this conversation, 2026-04-30 → 2026-05-01               |
+| Next step                | Implementation plan via `superpowers:writing-plans`      |
 
 ---
 
@@ -19,22 +19,22 @@ A **compliance-first, multi-tenant HRMS SaaS for the Indian SMB-to-mid-market se
 
 **Quality bar:** no shortcuts, no garbage code, no throwaway scaffolding. Every line ships with property-based tests, mutation testing, golden master snapshots, and architecture fitness functions enforcing module boundaries.
 
-**Differentiator:** beyond the table-stakes HRMS surface, the product ships a layer of *cherries* — AI copilot, WhatsApp ESS, statutory notice responder, migration tools from competitors, shadow-mode trial, ePayslip QR verifier, public Trust Center, right-to-know portal, scriptable extensions, marketplace — that compound into a category-defining product.
+**Differentiator:** beyond the table-stakes HRMS surface, the product ships a layer of _cherries_ — AI copilot, WhatsApp ESS, statutory notice responder, migration tools from competitors, shadow-mode trial, ePayslip QR verifier, public Trust Center, right-to-know portal, scriptable extensions, marketplace — that compound into a category-defining product.
 
 ---
 
 ## 1 — Decisions locked
 
-| # | Decision | Rationale |
-|---|---|---|
-| 1 | **Sequential 8-phase delivery**, no shortcuts, no parallel tracks until Phase 4 | Quality bar; solo capacity; foundations must be perfect before building on them |
-| 2 | **Phase order:** P1 Foundations → P2 Employee → P3 Attendance+Leave → P4 Payroll → P5 Compliance → P6 Recruitment → P7 Performance+Workflow+Analytics+ESS web → P8 Flutter mobile | Maps to commercial wedge (payroll closes deals); compliance immediately follows; mobile last because contract must stabilize |
-| 3 | **Stack:** NestJS + Next.js 15 + Flutter + PostgreSQL 16 + Drizzle + Redis + BullMQ + Better Auth + Cloudflare + Hetzner + Coolify | Founder's existing production stack (Mantraksha, Paath, InAJam, Komatsu run on this); Postgres + RLS is strongest multi-tenant compliance story; spec's MongoDB choice walked back deliberately |
-| 4 | **Modular monolith with bounded contexts** (Approach 2) | Holds shape across 8 phases; testable in isolation; Go-extraction is mechanical when needed; Linear/Cal.com/Stripe pattern |
-| 5 | **Go-shaped seams from day one** for hot paths (payroll engine, statutory generators, rules-engine evaluator) implemented as port + TS adapter; can swap to Go binary later without caller changes | Avoids premature complexity while preserving optionality |
-| 6 | **Themes 1, 2, 3, 5 fully**, themes 4 and 6 deferred minimally | Architecture rigor + security + code quality + compliance moat are non-negotiable; reliability/observability + mobile-specifics scale up as load demands |
-| 7 | **Solo + AI; CI replaces human review** | Process discipline (gates, fitness functions, mutation testing, AI PR review) substitutes for human reviewer until team grows |
-| 8 | **Realistic timeline: 18-24 months** for all 8 phases solo; 12-15 months with 2 devs | Honest expectation, not aspirational |
+| #   | Decision                                                                                                                                                                                           | Rationale                                                                                                                                                                                       |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Sequential 8-phase delivery**, no shortcuts, no parallel tracks until Phase 4                                                                                                                    | Quality bar; solo capacity; foundations must be perfect before building on them                                                                                                                 |
+| 2   | **Phase order:** P1 Foundations → P2 Employee → P3 Attendance+Leave → P4 Payroll → P5 Compliance → P6 Recruitment → P7 Performance+Workflow+Analytics+ESS web → P8 Flutter mobile                  | Maps to commercial wedge (payroll closes deals); compliance immediately follows; mobile last because contract must stabilize                                                                    |
+| 3   | **Stack:** NestJS + Next.js 15 + Flutter + PostgreSQL 16 + Drizzle + Redis + BullMQ + Better Auth + Cloudflare + Hetzner + Coolify                                                                 | Founder's existing production stack (Mantraksha, Paath, InAJam, Komatsu run on this); Postgres + RLS is strongest multi-tenant compliance story; spec's MongoDB choice walked back deliberately |
+| 4   | **Modular monolith with bounded contexts** (Approach 2)                                                                                                                                            | Holds shape across 8 phases; testable in isolation; Go-extraction is mechanical when needed; Linear/Cal.com/Stripe pattern                                                                      |
+| 5   | **Go-shaped seams from day one** for hot paths (payroll engine, statutory generators, rules-engine evaluator) implemented as port + TS adapter; can swap to Go binary later without caller changes | Avoids premature complexity while preserving optionality                                                                                                                                        |
+| 6   | **Themes 1, 2, 3, 5 fully**, themes 4 and 6 deferred minimally                                                                                                                                     | Architecture rigor + security + code quality + compliance moat are non-negotiable; reliability/observability + mobile-specifics scale up as load demands                                        |
+| 7   | **Solo + AI; CI replaces human review**                                                                                                                                                            | Process discipline (gates, fitness functions, mutation testing, AI PR review) substitutes for human reviewer until team grows                                                                   |
+| 8   | **Realistic timeline: 18-24 months** for all 8 phases solo; 12-15 months with 2 devs                                                                                                               | Honest expectation, not aspirational                                                                                                                                                            |
 
 ---
 
@@ -86,13 +86,13 @@ hrms/
 
 ### 2.3 — Deploy phasing
 
-| Phase | Compute | Database | Storage | Notes |
-|---|---|---|---|---|
-| P1-P3 | Single Hetzner CCX22 (~₹1,500/mo) | Postgres + Redis on box | R2 + S3 Object Lock for audit | Coolify managing containers |
-| P4 (Payroll) | Split workers to dedicated VPS | Add Postgres read replica | Dedicated audit-archive bucket | Batch isolation |
-| P5 (Compliance) | Extract `compliance` worker queue | Logical replication slot pre-provisioned | Per-region storage policy enforced | Inspector mode replicas spin up on demand |
-| P6-P7 | Web + admin scale horizontally behind Cloudflare LB | PgBouncer in transaction pooling mode; partitions on hot tables | Tenant-prefixed buckets | OpenSearch/SIEM live |
-| P8 (Mobile) | API gets `/v1` URL prefix locked | No DB change | Direct-to-R2 presigned uploads from device | Force-update + min-version endpoint live before stores |
+| Phase           | Compute                                             | Database                                                        | Storage                                    | Notes                                                  |
+| --------------- | --------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------ |
+| P1-P3           | Single Hetzner CCX22 (~₹1,500/mo)                   | Postgres + Redis on box                                         | R2 + S3 Object Lock for audit              | Coolify managing containers                            |
+| P4 (Payroll)    | Split workers to dedicated VPS                      | Add Postgres read replica                                       | Dedicated audit-archive bucket             | Batch isolation                                        |
+| P5 (Compliance) | Extract `compliance` worker queue                   | Logical replication slot pre-provisioned                        | Per-region storage policy enforced         | Inspector mode replicas spin up on demand              |
+| P6-P7           | Web + admin scale horizontally behind Cloudflare LB | PgBouncer in transaction pooling mode; partitions on hot tables | Tenant-prefixed buckets                    | OpenSearch/SIEM live                                   |
+| P8 (Mobile)     | API gets `/v1` URL prefix locked                    | No DB change                                                    | Direct-to-R2 presigned uploads from device | Force-update + min-version endpoint live before stores |
 
 ---
 
@@ -100,29 +100,29 @@ hrms/
 
 16 modules total inside `apps/api`. Each owns its Postgres schema; cross-module talk only via `packages/contracts/<module>/` interfaces or domain events through the outbox.
 
-| # | Module | Phase | Owns (Postgres schema) | Public contract surface |
-|---|---|---|---|---|
-| 1 | `platform` | P1 | `platform.*` (tenants, plans, billing, idempotency keys, sagas) | `TenantReader`, `TenantLifecycle` |
-| 2 | `iam` | P1 | `iam.*` (users, sessions, roles, permissions, MFA, passkeys, OAuth clients) | `UserReader`, `AuthGuard`, `Authorize` |
-| 3 | `entity` | P1 | `entity.*` (legal entities, statutory regs per state) | `EntityReader`, `EntityRegistration` |
-| 4 | `audit` | P1 | `audit.*` (append-only hash-chained log, Merkle anchors) | `AuditWriter` (event sink for all modules) |
-| 5 | `rules` | P1 | `rules.*` (rule packs, versions, effective dating) | `RuleResolver`, `StatutoryConstants` |
-| 6 | `notifications` | P1 (skeleton) → grows | `notifications.*` (templates, dispatches, deliveries, channels, preferences) | `NotificationDispatcher` |
-| 7 | `documents` | P1 (skeleton) → grows | `documents.*` (S3 metadata, versioning, signed URLs, classification) | `DocumentReader`, `PresignedUploader` |
-| 8 | `employee` | P2 | `employee.*` (master, versions, KYC, family, lifecycle) | `EmployeeReader`, `EmploymentLifecycle` |
-| 9 | `attendance` | P3 | `attendance.*` (events, daily, shifts, rosters, leave types/policies/balances/applications, OT, regularization) | `AttendanceReader`, `LeaveBalanceReader` |
-| 10 | `payroll` | P4 | `payroll.*` (salary structure, components, runs, lines, payslips, F&F, bank files) | `PayrollReader`, `CompensationReader` |
-| 11 | `compliance` | P5 | `compliance.*` (filings, ECR, 24Q, Form16, PT, LWF, registers, notices, drift scans, inspection packs) | `ComplianceReader`, `FilingScheduler` |
-| 12 | `recruitment` | P6 | `recruitment.*` (requisitions, candidates, applications, pipelines, interviews, offers, BGV, pre-joining) | `RecruitmentReader`, `OfferLifecycle` |
-| 13 | `performance` | P7 | `performance.*` (goals, OKRs, feedback, 1:1s, cycles, reviews, calibration, PIP, promotion) | `PerformanceReader` |
-| 14 | `workflow` | P7 | `workflow.*` (definitions, instances, approval chains, escalation, delegation) | `WorkflowEngine`, `ApprovalGuard` |
-| 15 | `analytics` | P7 | `analytics.*` (custom reports, materialized read models, exports, schedules) | `ReportRunner` |
-| 16 | `ess` | P7 | shares with employee/attendance/payroll; thin BFF | `EssQuery` (read-only orchestrator) |
+| #   | Module          | Phase                 | Owns (Postgres schema)                                                                                          | Public contract surface                    |
+| --- | --------------- | --------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 1   | `platform`      | P1                    | `platform.*` (tenants, plans, billing, idempotency keys, sagas)                                                 | `TenantReader`, `TenantLifecycle`          |
+| 2   | `iam`           | P1                    | `iam.*` (users, sessions, roles, permissions, MFA, passkeys, OAuth clients)                                     | `UserReader`, `AuthGuard`, `Authorize`     |
+| 3   | `entity`        | P1                    | `entity.*` (legal entities, statutory regs per state)                                                           | `EntityReader`, `EntityRegistration`       |
+| 4   | `audit`         | P1                    | `audit.*` (append-only hash-chained log, Merkle anchors)                                                        | `AuditWriter` (event sink for all modules) |
+| 5   | `rules`         | P1                    | `rules.*` (rule packs, versions, effective dating)                                                              | `RuleResolver`, `StatutoryConstants`       |
+| 6   | `notifications` | P1 (skeleton) → grows | `notifications.*` (templates, dispatches, deliveries, channels, preferences)                                    | `NotificationDispatcher`                   |
+| 7   | `documents`     | P1 (skeleton) → grows | `documents.*` (S3 metadata, versioning, signed URLs, classification)                                            | `DocumentReader`, `PresignedUploader`      |
+| 8   | `employee`      | P2                    | `employee.*` (master, versions, KYC, family, lifecycle)                                                         | `EmployeeReader`, `EmploymentLifecycle`    |
+| 9   | `attendance`    | P3                    | `attendance.*` (events, daily, shifts, rosters, leave types/policies/balances/applications, OT, regularization) | `AttendanceReader`, `LeaveBalanceReader`   |
+| 10  | `payroll`       | P4                    | `payroll.*` (salary structure, components, runs, lines, payslips, F&F, bank files)                              | `PayrollReader`, `CompensationReader`      |
+| 11  | `compliance`    | P5                    | `compliance.*` (filings, ECR, 24Q, Form16, PT, LWF, registers, notices, drift scans, inspection packs)          | `ComplianceReader`, `FilingScheduler`      |
+| 12  | `recruitment`   | P6                    | `recruitment.*` (requisitions, candidates, applications, pipelines, interviews, offers, BGV, pre-joining)       | `RecruitmentReader`, `OfferLifecycle`      |
+| 13  | `performance`   | P7                    | `performance.*` (goals, OKRs, feedback, 1:1s, cycles, reviews, calibration, PIP, promotion)                     | `PerformanceReader`                        |
+| 14  | `workflow`      | P7                    | `workflow.*` (definitions, instances, approval chains, escalation, delegation)                                  | `WorkflowEngine`, `ApprovalGuard`          |
+| 15  | `analytics`     | P7                    | `analytics.*` (custom reports, materialized read models, exports, schedules)                                    | `ReportRunner`                             |
+| 16  | `ess`           | P7                    | shares with employee/attendance/payroll; thin BFF                                                               | `EssQuery` (read-only orchestrator)        |
 
 ### 3.1 — Hard import rules (enforced in CI by `dependency-cruiser`)
 
 - Each domain module may import `packages/contracts` from cross-cutting modules (`audit`, `rules`, `iam`, `entity`, `notifications`, `documents`) and from modules earlier in the dependency graph
-- `payroll` may import contracts from `employee`, `attendance`, `rules`, `entity`, `iam`, `audit` — and *no other domain module*
+- `payroll` may import contracts from `employee`, `attendance`, `rules`, `entity`, `iam`, `audit` — and _no other domain module_
 - `compliance` may import from `payroll`, `employee`, `entity`, `rules`, `audit`
 - `recruitment` is fully isolated from `payroll` — talks only via the `EmployeeLifecycle.onCandidateConverted` event
 - No domain module may import from `apps/web`, `apps/mobile`, or another module's `infrastructure/`
@@ -220,6 +220,7 @@ export const upcastPayrollRunFinalized = (raw: unknown) => { ... };
 ### 4.5 — Distributed locking with fenced Redlock
 
 Operations that must not run concurrently per `(tenant, entity, period)`:
+
 - Payroll run finalize
 - ECR file generation
 - Salary structure publish
@@ -230,7 +231,9 @@ Operations that must not run concurrently per `(tenant, entity, period)`:
 await locks.withLock(
   `payroll.run.finalize:${tenantId}:${entityId}:${period}`,
   { ttlMs: 5 * 60_000, fenceToken: true },
-  async (token) => { /* every write includes WHERE fence_token <= :token */ }
+  async (token) => {
+    /* every write includes WHERE fence_token <= :token */
+  },
 );
 ```
 
@@ -241,6 +244,7 @@ Fence tokens close Redlock's GC-pause correctness gap.
 Every audit entry hashes the previous: `this_hash = sha256(prev_hash || canonical_json(payload))`.
 
 Every 5 minutes, Merkle root of new entries is:
+
 1. Written to `audit.merkle_anchors`
 2. Pushed to S3 Object Lock (compliance mode, 7-year retention) — even root admin can't modify
 3. (Phase 5) anchored to OpenTimestamps for cryptographic proof-of-existence
@@ -279,11 +283,11 @@ Every mutation accepts `Idempotency-Key`. `(key, tenant_id) ON CONFLICT → retu
 
 ### 4.13 — Error model
 
-| Category | HTTP | Body | i18n |
-|---|---|---|---|
-| Validation | 400 | `{ code: 'validation', issues: [...] }` | client renders by key |
-| Domain | 4xx mapped | `{ code: 'employee.kyc.pan_invalid', context: {...} }` | client renders message |
-| Infrastructure | 5xx | `{ code: 'internal', request_id }` | generic only |
+| Category       | HTTP       | Body                                                   | i18n                   |
+| -------------- | ---------- | ------------------------------------------------------ | ---------------------- |
+| Validation     | 400        | `{ code: 'validation', issues: [...] }`                | client renders by key  |
+| Domain         | 4xx mapped | `{ code: 'employee.kyc.pan_invalid', context: {...} }` | client renders message |
+| Infrastructure | 5xx        | `{ code: 'internal', request_id }`                     | generic only           |
 
 Stable error codes are part of the API contract.
 
@@ -342,13 +346,13 @@ modules/employee/
 
 ### 5.2 — Hard import rules
 
-| Layer | May import |
-|---|---|
-| `domain/` | itself only — no NestJS, Drizzle, Bull, Node crypto, anything |
-| `application/` | `domain/` + `packages/contracts/<other-module>/` |
-| `infrastructure/` | `domain/`, `application/`, NestJS, Drizzle, libraries |
-| `interface/` | all three above |
-| Other modules | only `packages/contracts/<this-module>/` |
+| Layer             | May import                                                    |
+| ----------------- | ------------------------------------------------------------- |
+| `domain/`         | itself only — no NestJS, Drizzle, Bull, Node crypto, anything |
+| `application/`    | `domain/` + `packages/contracts/<other-module>/`              |
+| `infrastructure/` | `domain/`, `application/`, NestJS, Drizzle, libraries         |
+| `interface/`      | all three above                                               |
+| Other modules     | only `packages/contracts/<this-module>/`                      |
 
 ### 5.3 — Result types (no throwing for domain failures)
 
@@ -389,7 +393,7 @@ await uow.run(async (tx) => {
   const result = employee.reviseCompensation(input);
   if (result.isErr()) return result;
   await employees.save(employee, tx);
-  uow.publish(result.value.events);    // → outbox in same tx
+  uow.publish(result.value.events); // → outbox in same tx
   uow.audit(result.value.auditEntries); // → audit chain in same tx
   return ok(undefined);
 });
@@ -425,10 +429,10 @@ Tags drive: crypto adapter (encrypt), logger (redact), error serializer (strip),
 
 ### 5.10 — CQRS-strict separation
 
-| Path | Returns | May mutate | Cacheable |
-|---|---|---|---|
-| Command | `Result<void, DomainError>` | yes | no |
-| Query | DTO snapshot | no | yes (with ETag) |
+| Path    | Returns                     | May mutate | Cacheable       |
+| ------- | --------------------------- | ---------- | --------------- |
+| Command | `Result<void, DomainError>` | yes        | no              |
+| Query   | DTO snapshot                | no         | yes (with ETag) |
 
 Queries can hit replicas / materialized views; commands always primary.
 
@@ -450,11 +454,11 @@ Lint rules can be bypassed with `eslint-disable`. Fitness function tests cannot 
 
 Every domain table has three time axes:
 
-| Axis | Columns | Question |
-|---|---|---|
-| Valid time | `valid_from / valid_to` | When was this fact true *in the world*? |
-| Decision time | `decided_at / superseded_at` | When did we *record* this fact? |
-| System time | `created_at / updated_at` | When did the DB row physically change? |
+| Axis          | Columns                      | Question                                |
+| ------------- | ---------------------------- | --------------------------------------- |
+| Valid time    | `valid_from / valid_to`      | When was this fact true _in the world_? |
+| Decision time | `decided_at / superseded_at` | When did we _record_ this fact?         |
+| System time   | `created_at / updated_at`    | When did the DB row physically change?  |
 
 A backdated salary revision: `valid_from = 2026-01-01`, `decided_at = 2026-04-15`, `created_at = 2026-04-15T10:32`. Three axes answer different questions. Required for retros + statutory audits.
 
@@ -472,11 +476,11 @@ Right-to-erasure scanner reads this metadata and processes DPDPA requests automa
 
 ### 5.14 — Three-tier testing per module
 
-| Tier | Tool | Coverage gate |
-|---|---|---|
-| Property-based on domain | `fast-check` | every domain policy + every formula |
-| Adapter contract | Vitest + testcontainers | every port has ≥1 contract suite |
-| Mutation on handlers | Stryker | ≥95% (payroll/compliance/rules), ≥85% elsewhere |
+| Tier                     | Tool                    | Coverage gate                                   |
+| ------------------------ | ----------------------- | ----------------------------------------------- |
+| Property-based on domain | `fast-check`            | every domain policy + every formula             |
+| Adapter contract         | Vitest + testcontainers | every port has ≥1 contract suite                |
+| Mutation on handlers     | Stryker                 | ≥95% (payroll/compliance/rules), ≥85% elsewhere |
 
 ### 5.15 — `pnpm run arch:report` generates living architecture docs
 
@@ -540,12 +544,12 @@ Postgres mathematically guarantees no two compensation versions overlap in both 
 
 Four independent encryption layers:
 
-| Layer | What | Defeats |
-|---|---|---|
-| Volume | LUKS / cloud disk encryption | Disk theft alone |
-| Tablespace | Encrypted volumes via `pgBackRest` cipher | Backup theft |
-| Column-level (envelope) | AES-256-GCM with per-tenant DEK; DEK encrypted with KMS-resident KEK | DB dump |
-| KMS-hierarchical | KEK in HSM (AWS KMS / Vault Transit) | Application secrets |
+| Layer                   | What                                                                 | Defeats             |
+| ----------------------- | -------------------------------------------------------------------- | ------------------- |
+| Volume                  | LUKS / cloud disk encryption                                         | Disk theft alone    |
+| Tablespace              | Encrypted volumes via `pgBackRest` cipher                            | Backup theft        |
+| Column-level (envelope) | AES-256-GCM with per-tenant DEK; DEK encrypted with KMS-resident KEK | DB dump             |
+| KMS-hierarchical        | KEK in HSM (AWS KMS / Vault Transit)                                 | Application secrets |
 
 DEKs in `platform.tenant_deks` (KEK-encrypted). Domain row stores `(ciphertext, dek_id, iv, auth_tag, algorithm)`. Plaintext only in memory; redacted from logs by classification tags.
 
@@ -593,6 +597,7 @@ Every release computes SHA-256 of live schema. Nightly job compares vs latest re
 ### 6.12 — Continuous data integrity validation
 
 Nightly job samples ~10k rows per critical table:
+
 - Audit hash chain reconstructs correctly
 - Bitemporal exclusion constraints actually exclude
 - FK integrity (no orphans)
@@ -624,14 +629,14 @@ Migrator credentials in Vault behind two-person approval (Shamir 2-of-3 for solo
 
 ### 6.17 — Backups, restore, DR drills
 
-| Layer | Tool | RPO | RTO |
-|---|---|---|---|
-| Continuous WAL | `pgBackRest` to encrypted R2 | < 60 s | n/a |
-| Full daily | `pgBackRest` snapshot | 24 h | < 30 min |
-| Off-region copy | Cross-region R2 replication | < 5 min lag | DR |
-| Audit archive | S3 Object Lock 7-year compliance mode | weekly | regulator |
+| Layer           | Tool                                  | RPO         | RTO       |
+| --------------- | ------------------------------------- | ----------- | --------- |
+| Continuous WAL  | `pgBackRest` to encrypted R2          | < 60 s      | n/a       |
+| Full daily      | `pgBackRest` snapshot                 | 24 h        | < 30 min  |
+| Off-region copy | Cross-region R2 replication           | < 5 min lag | DR        |
+| Audit archive   | S3 Object Lock 7-year compliance mode | weekly      | regulator |
 
-**Quarterly automated restore drill** with signed `restore-drill-YYYY-Hn.pdf` artifact. Backups encrypted with KMS keys *separate* from app DEKs.
+**Quarterly automated restore drill** with signed `restore-drill-YYYY-Hn.pdf` artifact. Backups encrypted with KMS keys _separate_ from app DEKs.
 
 ### 6.18 — Connection pooling, replicas, read-your-writes
 
@@ -741,16 +746,16 @@ JWT signing keys rotated every 30 days; old keys retained only for max access-to
 
 ### 7.12 — Observability stack
 
-| Concern | Tool |
-|---|---|
-| Tracing | OpenTelemetry SDK → Jaeger/Tempo |
-| Metrics | OTel → Prometheus → Grafana |
-| Logs | pino → JSON → Loki/ClickHouse |
-| Errors | Sentry (web + API + Flutter) |
-| Uptime | Uptime Kuma multi-geo |
-| RUM | Sentry Performance + PostHog |
-| SIEM | OpenSearch (P5) |
-| SLO tracking | Sloth (P4) |
+| Concern      | Tool                             |
+| ------------ | -------------------------------- |
+| Tracing      | OpenTelemetry SDK → Jaeger/Tempo |
+| Metrics      | OTel → Prometheus → Grafana      |
+| Logs         | pino → JSON → Loki/ClickHouse    |
+| Errors       | Sentry (web + API + Flutter)     |
+| Uptime       | Uptime Kuma multi-geo            |
+| RUM          | Sentry Performance + PostHog     |
+| SIEM         | OpenSearch (P5)                  |
+| SLO tracking | Sloth (P4)                       |
 
 End-to-end trace propagation including outbox events. Tenant-aware sampling: 100% for payroll/compliance/errors/Enterprise; 5% routine reads. SLO burn-rate alerting, no threshold spam.
 
@@ -835,20 +840,21 @@ Backward-compat enforced by `oasdiff` in CI: adding optional fields OK; required
 
 BullMQ + scheduler. Queues:
 
-| Queue | Concurrency | Retry |
-|---|---|---|
-| `events.{module}` | tuned | 5 attempts, exp backoff, DLQ |
-| `jobs.payroll-run` | 1 per tenant (Redlock-fenced) | 3 attempts, alert on 2nd |
-| `jobs.statutory-file-generation` | 4 | 5 attempts |
-| `jobs.notifications` | 16 | 5 attempts, channel-DLQ |
-| `jobs.compliance-drift-scan` | 2 | nightly |
-| `jobs.audit-archive` | 1 | weekly |
+| Queue                            | Concurrency                   | Retry                        |
+| -------------------------------- | ----------------------------- | ---------------------------- |
+| `events.{module}`                | tuned                         | 5 attempts, exp backoff, DLQ |
+| `jobs.payroll-run`               | 1 per tenant (Redlock-fenced) | 3 attempts, alert on 2nd     |
+| `jobs.statutory-file-generation` | 4                             | 5 attempts                   |
+| `jobs.notifications`             | 16                            | 5 attempts, channel-DLQ      |
+| `jobs.compliance-drift-scan`     | 2                             | nightly                      |
+| `jobs.audit-archive`             | 1                             | weekly                       |
 
 Scheduled jobs declared via `@Cron` decorator. Bull dashboard internal-only. DLQ reviewable, replayable. Job idempotency via `jobId` + `processed_jobs` table.
 
 ### 7.25 — Cost & abuse metering
 
 Per-request signals: DB queries, query time, vendor calls, AI tokens, storage bytes, wall time. Aggregated daily per tenant. Drives:
+
 - Customer billing for usage-based items (AI, BGV, e-sign, SMS passthrough)
 - Cost attribution
 - Abuse detection (3σ deviation alerts on-call)
@@ -862,25 +868,25 @@ Per-request signals: DB queries, query time, vendor calls, AI tokens, storage by
 
 Every PR runs in parallel:
 
-| Gate | Tool | Blocks merge |
-|---|---|---|
-| Lint+format | ESLint + Prettier | Yes |
-| Type | tsc --noEmit | Yes |
-| Module boundary | dependency-cruiser | Yes |
-| Architecture fitness | Vitest in `tests/architecture/` | Yes |
-| Unit + integration | Vitest + testcontainers | Yes |
-| Property-based | fast-check | Yes |
-| Mutation (changed) | Stryker | Score gate |
-| SAST | Semgrep | High blocks |
-| Deps | Snyk + osv-scanner | High blocks |
-| Secrets | Gitleaks | Any blocks |
-| Container | Trivy | High blocks |
-| OpenAPI breaking | oasdiff | Breaking blocks |
-| Schema drift | shadow-apply | Drift blocks |
-| AI review | Claude | Comments only |
-| Licenses | license-checker | Forbidden blocks |
-| Bundle (web) | size-limit | Over blocks |
-| A11y (web) | axe-playwright | Violations block |
+| Gate                 | Tool                            | Blocks merge     |
+| -------------------- | ------------------------------- | ---------------- |
+| Lint+format          | ESLint + Prettier               | Yes              |
+| Type                 | tsc --noEmit                    | Yes              |
+| Module boundary      | dependency-cruiser              | Yes              |
+| Architecture fitness | Vitest in `tests/architecture/` | Yes              |
+| Unit + integration   | Vitest + testcontainers         | Yes              |
+| Property-based       | fast-check                      | Yes              |
+| Mutation (changed)   | Stryker                         | Score gate       |
+| SAST                 | Semgrep                         | High blocks      |
+| Deps                 | Snyk + osv-scanner              | High blocks      |
+| Secrets              | Gitleaks                        | Any blocks       |
+| Container            | Trivy                           | High blocks      |
+| OpenAPI breaking     | oasdiff                         | Breaking blocks  |
+| Schema drift         | shadow-apply                    | Drift blocks     |
+| AI review            | Claude                          | Comments only    |
+| Licenses             | license-checker                 | Forbidden blocks |
+| Bundle (web)         | size-limit                      | Over blocks      |
+| A11y (web)           | axe-playwright                  | Violations block |
 
 Branch protection on `main` even solo. Conventional commits + signed commits + linear history (squash) + no force-push. Deploy pipeline (full detail in §8.16): build → sign image (Cosign) → SLSA attestation → SBOM (CycloneDX) → staging → e2e + system:doctor → manual approval → canary → progressive rollout → auto-rollback on SLO burn.
 
@@ -905,24 +911,24 @@ Branch protection on `main` even solo. Conventional commits + signed commits + l
 
 ### 8.1 — Testing pyramid
 
-| Tier | Where | Speed | Coverage gate |
-|---|---|---|---|
-| Domain unit | `tests/unit/` | <100ms each | 100% line, 95% mutation |
-| Property-based | `tests/property/` | <30s suite | every domain policy |
-| Application handler | `tests/handlers/` | <500ms each | 95% line, 85% mutation |
-| Adapter contract | `tests/contracts/` (testcontainers) | seconds | every port |
-| Module integration | `tests/integration/` | seconds | every cross-module listener |
-| API contract | `tests/api/` | seconds | every public endpoint |
-| E2E web | `tests/e2e/web/` Playwright | minutes | golden paths |
-| E2E mobile (P8) | `tests/e2e/mobile/` Patrol | minutes | onboarding + ESS happy paths |
-| Visual regression | `tests/visual/` | minutes | top 30 screens |
-| Accessibility | `tests/a11y/` axe + manual SR | minutes | WCAG 2.2 AA |
-| Performance | `tests/perf/` k6 | nightly | per-endpoint SLO |
-| Load | `tests/load/` k6 | weekly | system scenarios |
-| Soak | `tests/soak/` | monthly | 72h synthetic load |
-| Chaos | `tests/chaos/` | bi-weekly | scheduled fault injection in staging |
-| Security | `tests/security/` | every PR + nightly | SAST + DAST + fuzzing + SBOM diff |
-| Compliance evidence | `tests/compliance/` | weekly | every rule pack vs historical fixtures |
+| Tier                | Where                               | Speed              | Coverage gate                          |
+| ------------------- | ----------------------------------- | ------------------ | -------------------------------------- |
+| Domain unit         | `tests/unit/`                       | <100ms each        | 100% line, 95% mutation                |
+| Property-based      | `tests/property/`                   | <30s suite         | every domain policy                    |
+| Application handler | `tests/handlers/`                   | <500ms each        | 95% line, 85% mutation                 |
+| Adapter contract    | `tests/contracts/` (testcontainers) | seconds            | every port                             |
+| Module integration  | `tests/integration/`                | seconds            | every cross-module listener            |
+| API contract        | `tests/api/`                        | seconds            | every public endpoint                  |
+| E2E web             | `tests/e2e/web/` Playwright         | minutes            | golden paths                           |
+| E2E mobile (P8)     | `tests/e2e/mobile/` Patrol          | minutes            | onboarding + ESS happy paths           |
+| Visual regression   | `tests/visual/`                     | minutes            | top 30 screens                         |
+| Accessibility       | `tests/a11y/` axe + manual SR       | minutes            | WCAG 2.2 AA                            |
+| Performance         | `tests/perf/` k6                    | nightly            | per-endpoint SLO                       |
+| Load                | `tests/load/` k6                    | weekly             | system scenarios                       |
+| Soak                | `tests/soak/`                       | monthly            | 72h synthetic load                     |
+| Chaos               | `tests/chaos/`                      | bi-weekly          | scheduled fault injection in staging   |
+| Security            | `tests/security/`                   | every PR + nightly | SAST + DAST + fuzzing + SBOM diff      |
+| Compliance evidence | `tests/compliance/`                 | weekly             | every rule pack vs historical fixtures |
 
 ### 8.2 — Property-based + mutation + golden master
 
@@ -966,21 +972,21 @@ Failing 1× then passing on retry recorded; 3 occurrences in 7 days → quaranti
 
 ### 8.10 — Security testing
 
-| Layer | Tool | Schedule |
-|---|---|---|
-| SAST | Semgrep | every PR |
-| Deps | Snyk + osv-scanner + Renovate | every PR + daily |
-| Container | Trivy + Grype | every build |
-| IaC | Checkov | every PR |
-| Secrets | Gitleaks + GH native | pre-commit + daily |
-| Licenses | allowlist | every PR |
-| DAST | OWASP ZAP authenticated | weekly + pre-release |
-| Fuzzing | Custom Zod-schema + REST fuzzer | nightly on changed |
-| **Authz fuzzing** | enumerate all roles × endpoints × scopes; assert deny matrix | nightly |
-| Auth-tag verification | sample re-decrypt 1k random rows | nightly |
-| Pen test | CERT-In empanelled vendor | annual |
-| Bug bounty | HackerOne | always-on (Phase 4+) |
-| Supply chain | Sigstore + SLSA L3 | every release |
+| Layer                 | Tool                                                         | Schedule             |
+| --------------------- | ------------------------------------------------------------ | -------------------- |
+| SAST                  | Semgrep                                                      | every PR             |
+| Deps                  | Snyk + osv-scanner + Renovate                                | every PR + daily     |
+| Container             | Trivy + Grype                                                | every build          |
+| IaC                   | Checkov                                                      | every PR             |
+| Secrets               | Gitleaks + GH native                                         | pre-commit + daily   |
+| Licenses              | allowlist                                                    | every PR             |
+| DAST                  | OWASP ZAP authenticated                                      | weekly + pre-release |
+| Fuzzing               | Custom Zod-schema + REST fuzzer                              | nightly on changed   |
+| **Authz fuzzing**     | enumerate all roles × endpoints × scopes; assert deny matrix | nightly              |
+| Auth-tag verification | sample re-decrypt 1k random rows                             | nightly              |
+| Pen test              | CERT-In empanelled vendor                                    | annual               |
+| Bug bounty            | HackerOne                                                    | always-on (Phase 4+) |
+| Supply chain          | Sigstore + SLSA L3                                           | every release        |
 
 ### 8.11 — Privilege escalation + insider threat simulation
 
@@ -996,22 +1002,22 @@ Weekly automated scan for: impossible-travel, bulk PII reads, permission grant �
 
 ### 8.14 — Test data strategy
 
-| Dataset | Purpose | PII |
-|---|---|---|
-| Synthetic seed | Property/unit/E2E deterministic | None (synthetic) |
+| Dataset                | Purpose                              | PII               |
+| ---------------------- | ------------------------------------ | ----------------- |
+| Synthetic seed         | Property/unit/E2E deterministic      | None (synthetic)  |
 | Anonymized prod-shaped | Integration/perf/load/E2E regression | None (anonymized) |
-| Compliance fixtures | Statutory rule pack snapshots | None (fictional) |
+| Compliance fixtures    | Statutory rule pack snapshots        | None (fictional)  |
 
 ### 8.15 — Pre-prod environments
 
-| Env | Data | Promotion |
-|---|---|---|
-| Local dev | Synthetic seed | n/a |
-| PR preview (Coolify ephemeral) | Synthetic seed | spun up on PR, torn down on close |
-| Staging | Anonymized prod-shaped | E2E + integration must pass |
-| Shadow-prod (no live traffic) | Anonymized prod-shaped, refreshed nightly | always available; chaos + DAST + restore drills |
-| Canary | Real prod data | manual gate + auto-rollback on SLO burn |
-| Production | Real | canary green ≥30 min |
+| Env                            | Data                                      | Promotion                                       |
+| ------------------------------ | ----------------------------------------- | ----------------------------------------------- |
+| Local dev                      | Synthetic seed                            | n/a                                             |
+| PR preview (Coolify ephemeral) | Synthetic seed                            | spun up on PR, torn down on close               |
+| Staging                        | Anonymized prod-shaped                    | E2E + integration must pass                     |
+| Shadow-prod (no live traffic)  | Anonymized prod-shaped, refreshed nightly | always available; chaos + DAST + restore drills |
+| Canary                         | Real prod data                            | manual gate + auto-rollback on SLO burn         |
+| Production                     | Real                                      | canary green ≥30 min                            |
 
 ### 8.16 — Release engineering
 
@@ -1036,6 +1042,7 @@ Force-update via `/v1/_app-config`; phased rollout 10%→50%→100% over 7 days;
 ### 8.20 — Compliance evidence pipeline
 
 `docs/compliance/evidence/` auto-collected:
+
 - Quarterly access reviews
 - Per-release artifacts
 - Incident + post-mortems
@@ -1554,16 +1561,16 @@ This is where the moat compounds.
 
 Detailed milestones + hiring triggers + budgets are out of scope for this design doc; will live in the implementation plan.
 
-| Phase | What ships | Solo target |
-|---|---|---|
-| **P1 — Foundations** | platform, iam, entity, audit, rules, notifications skeleton, documents skeleton, deploy + CI/CD baseline, security baseline, Trust Center | 8-10 weeks |
-| **P2 — Employee** | employee module, KYC, lifecycle, documents flow, bulk import, dogfood begins | 6-8 weeks |
-| **P3 — Attendance + Leave** | attendance + leave, shifts, rosters, OT, regularization, blue-collar shift patterns | 8-10 weeks |
-| **P4 — Payroll** | salary structure, run engine, payslip, bank files, F&F, journal voucher | 10-12 weeks |
-| **P5 — Compliance** | PF ECR, ESI, TDS 24Q, Form 16, PT, LWF, registers, deadlines, drift scanner, inspection pack | 8-10 weeks |
-| **P6 — Recruitment** | requisitions, candidates, pipelines, interviews, offers, BGV, pre-joining | 8-10 weeks |
-| **P7 — Performance + Workflow + Analytics + ESS web** | goals, reviews, calibration, PIP, workflow engine, custom reports, dashboards, ESS web | 10-14 weeks |
-| **P8 — Flutter mobile** | employee + manager features, offline-first, push, biometric, geofence | 8-10 weeks |
+| Phase                                                 | What ships                                                                                                                                | Solo target |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| **P1 — Foundations**                                  | platform, iam, entity, audit, rules, notifications skeleton, documents skeleton, deploy + CI/CD baseline, security baseline, Trust Center | 8-10 weeks  |
+| **P2 — Employee**                                     | employee module, KYC, lifecycle, documents flow, bulk import, dogfood begins                                                              | 6-8 weeks   |
+| **P3 — Attendance + Leave**                           | attendance + leave, shifts, rosters, OT, regularization, blue-collar shift patterns                                                       | 8-10 weeks  |
+| **P4 — Payroll**                                      | salary structure, run engine, payslip, bank files, F&F, journal voucher                                                                   | 10-12 weeks |
+| **P5 — Compliance**                                   | PF ECR, ESI, TDS 24Q, Form 16, PT, LWF, registers, deadlines, drift scanner, inspection pack                                              | 8-10 weeks  |
+| **P6 — Recruitment**                                  | requisitions, candidates, pipelines, interviews, offers, BGV, pre-joining                                                                 | 8-10 weeks  |
+| **P7 — Performance + Workflow + Analytics + ESS web** | goals, reviews, calibration, PIP, workflow engine, custom reports, dashboards, ESS web                                                    | 10-14 weeks |
+| **P8 — Flutter mobile**                               | employee + manager features, offline-first, push, biometric, geofence                                                                     | 8-10 weeks  |
 
 **Total solo: ~66-84 weeks (15-20 months).** With 2 developers post-Phase 4: ~12-15 months. Integration overhead (cross-phase regressions, dogfood findings, customer migrations) typically adds another 10-15% on top — plan for 18-24 months solo end-to-end.
 
@@ -1573,75 +1580,75 @@ Cherries layered in: 🟢 day-one cherries ship in their owning phase; 🟡 cher
 
 ## 11 — Open questions / decisions deferred
 
-| # | Question | Default until decided |
-|---|---|---|
-| 1 | Hetzner location: Falkenstein vs Helsinki vs custom Mumbai for India residency | Investigate Indian DC partners pre-launch; default Falkenstein with India-residency tenants on dedicated infra |
-| 2 | Self-host Vault vs Infisical | Start Infisical (lower ops burden), revisit if scale demands |
-| 3 | OpenFGA vs custom ReBAC implementation | Defer — RBAC sufficient through P3; revisit P4 |
-| 4 | OAuth provider: Better Auth all the way vs Auth0/Clerk for SSO | Better Auth for v1; consider Clerk for SSO if SCIM proves complex |
-| 5 | Self-hosted Sentry/Loki vs cloud | Start cloud (faster), self-host if cost demands |
-| 6 | Local Qwen vs Claude API for routine inference | Claude API only Phase 1-3; evaluate local Qwen for cost optimization Phase 4+ |
-| 7 | gqlgen-style GraphQL layer | Out of scope v1; revisit only if mobile needs it Phase 8 |
-| 8 | Temporal for sagas | Custom orchestrator v1; revisit if saga count crosses ~30 |
-| 9 | Whisper vs Bhashini for ASR (Phase 8 voice ESS) | Try Bhashini first (free, govt-backed, tuned for Indian languages); Whisper fallback |
-| 10 | Public-cloud KMS vs self-hosted Vault Transit for KEK | Cloud KMS for v1 (HSM-backed, lower ops); evaluate self-hosted Vault Transit if data sovereignty demands |
+| #   | Question                                                                       | Default until decided                                                                                          |
+| --- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| 1   | Hetzner location: Falkenstein vs Helsinki vs custom Mumbai for India residency | Investigate Indian DC partners pre-launch; default Falkenstein with India-residency tenants on dedicated infra |
+| 2   | Self-host Vault vs Infisical                                                   | Start Infisical (lower ops burden), revisit if scale demands                                                   |
+| 3   | OpenFGA vs custom ReBAC implementation                                         | Defer — RBAC sufficient through P3; revisit P4                                                                 |
+| 4   | OAuth provider: Better Auth all the way vs Auth0/Clerk for SSO                 | Better Auth for v1; consider Clerk for SSO if SCIM proves complex                                              |
+| 5   | Self-hosted Sentry/Loki vs cloud                                               | Start cloud (faster), self-host if cost demands                                                                |
+| 6   | Local Qwen vs Claude API for routine inference                                 | Claude API only Phase 1-3; evaluate local Qwen for cost optimization Phase 4+                                  |
+| 7   | gqlgen-style GraphQL layer                                                     | Out of scope v1; revisit only if mobile needs it Phase 8                                                       |
+| 8   | Temporal for sagas                                                             | Custom orchestrator v1; revisit if saga count crosses ~30                                                      |
+| 9   | Whisper vs Bhashini for ASR (Phase 8 voice ESS)                                | Try Bhashini first (free, govt-backed, tuned for Indian languages); Whisper fallback                           |
+| 10  | Public-cloud KMS vs self-hosted Vault Transit for KEK                          | Cloud KMS for v1 (HSM-backed, lower ops); evaluate self-hosted Vault Transit if data sovereignty demands       |
 
 ---
 
 ## 12 — Glossary
 
-| Term | Meaning |
-|---|---|
-| **Tenant** | Top-level customer organization (one company that signed up) |
-| **Entity** | Legal employer with its own PAN under a tenant |
-| **Bounded context** | A module owning its schema + interface; talks to others only via contracts/events |
-| **RLS** | Row-Level Security — Postgres feature that filters rows based on session settings |
-| **FORCE RLS** | RLS policies apply even to the table owner |
-| **Bitemporal** | Data has both *valid time* (when fact is true) and *decision time* (when we recorded it) |
-| **Outbox** | Pattern: write events to a DB table in same tx as state, separate publisher dispatches |
-| **Saga** | Multi-step workflow with explicit compensation on failure |
-| **Capability token** | Compile-time-enforced proof of authorization |
-| **Result type** | `Ok(value) | Err(error)` instead of throwing |
-| **DEK / KEK** | Data Encryption Key / Key Encryption Key (envelope encryption) |
-| **HSM** | Hardware Security Module — tamper-resistant crypto hardware |
-| **Tokenization vault** | Separate DB storing only token→ciphertext, isolated from main DB |
-| **Blind index** | HMAC of a field value, enables equality search without decryption |
-| **Merkle anchor** | Root hash of a batch of audit entries, anchored to write-once storage |
-| **Property-based testing** | Generates random inputs against pure functions; shrinks failures |
-| **Mutation testing** | Mutates code, runs tests; surviving mutations = weak tests |
-| **Golden master** | Captured historical input + output; future runs must match byte-for-byte |
-| **Approval testing** | Outputs reviewed by human, locked as gold; future runs diff against gold |
-| **Architecture fitness function** | Test that asserts an architectural rule (e.g., "domain has no NestJS imports") |
-| **Cherry on top** | Differentiating feature beyond core spec that wins deals or builds moat |
-| **Compliance Drift** | Salary structure / employee state silently violating current statutory rules |
-| **Notice Responder** | AI-assisted parser of EPFO/ESIC/IT department notices |
-| **Inspection Pack** | Bundle of statutory docs prepared for an inspection |
-| **Inspector mode** | Time-bound read-only access for statutory inspectors |
-| **DPDPA** | Digital Personal Data Protection Act 2023 (India) |
-| **POSH** | Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act |
-| **CCM** | Continuous Controls Monitoring — real-time SOC2/ISO control verification |
-| **JIT elevation** | Just-in-Time privilege elevation; admins claim elevated rights with reason + TTL |
-| **ReBAC** | Relationship-based access control (Zanzibar-style) |
-| **ESS** | Employee Self Service |
-| **F&F** | Full and Final settlement on employee exit |
-| **ECR** | Electronic Challan-cum-Return (PF filing) |
-| **24Q** | Quarterly TDS return for salaries |
-| **PT** | Professional Tax (state-level) |
-| **LWF** | Labour Welfare Fund |
-| **CLRA** | Contract Labour (Regulation and Abolition) Act |
-| **MCA21** | Ministry of Corporate Affairs portal for Indian corporate registry |
-| **UAN** | Universal Account Number (PF identifier) |
-| **CIN** | Corporate Identification Number |
+| Term                              | Meaning                                                                                  |
+| --------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------- |
+| **Tenant**                        | Top-level customer organization (one company that signed up)                             |
+| **Entity**                        | Legal employer with its own PAN under a tenant                                           |
+| **Bounded context**               | A module owning its schema + interface; talks to others only via contracts/events        |
+| **RLS**                           | Row-Level Security — Postgres feature that filters rows based on session settings        |
+| **FORCE RLS**                     | RLS policies apply even to the table owner                                               |
+| **Bitemporal**                    | Data has both _valid time_ (when fact is true) and _decision time_ (when we recorded it) |
+| **Outbox**                        | Pattern: write events to a DB table in same tx as state, separate publisher dispatches   |
+| **Saga**                          | Multi-step workflow with explicit compensation on failure                                |
+| **Capability token**              | Compile-time-enforced proof of authorization                                             |
+| **Result type**                   | `Ok(value)                                                                               | Err(error)` instead of throwing |
+| **DEK / KEK**                     | Data Encryption Key / Key Encryption Key (envelope encryption)                           |
+| **HSM**                           | Hardware Security Module — tamper-resistant crypto hardware                              |
+| **Tokenization vault**            | Separate DB storing only token→ciphertext, isolated from main DB                         |
+| **Blind index**                   | HMAC of a field value, enables equality search without decryption                        |
+| **Merkle anchor**                 | Root hash of a batch of audit entries, anchored to write-once storage                    |
+| **Property-based testing**        | Generates random inputs against pure functions; shrinks failures                         |
+| **Mutation testing**              | Mutates code, runs tests; surviving mutations = weak tests                               |
+| **Golden master**                 | Captured historical input + output; future runs must match byte-for-byte                 |
+| **Approval testing**              | Outputs reviewed by human, locked as gold; future runs diff against gold                 |
+| **Architecture fitness function** | Test that asserts an architectural rule (e.g., "domain has no NestJS imports")           |
+| **Cherry on top**                 | Differentiating feature beyond core spec that wins deals or builds moat                  |
+| **Compliance Drift**              | Salary structure / employee state silently violating current statutory rules             |
+| **Notice Responder**              | AI-assisted parser of EPFO/ESIC/IT department notices                                    |
+| **Inspection Pack**               | Bundle of statutory docs prepared for an inspection                                      |
+| **Inspector mode**                | Time-bound read-only access for statutory inspectors                                     |
+| **DPDPA**                         | Digital Personal Data Protection Act 2023 (India)                                        |
+| **POSH**                          | Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act      |
+| **CCM**                           | Continuous Controls Monitoring — real-time SOC2/ISO control verification                 |
+| **JIT elevation**                 | Just-in-Time privilege elevation; admins claim elevated rights with reason + TTL         |
+| **ReBAC**                         | Relationship-based access control (Zanzibar-style)                                       |
+| **ESS**                           | Employee Self Service                                                                    |
+| **F&F**                           | Full and Final settlement on employee exit                                               |
+| **ECR**                           | Electronic Challan-cum-Return (PF filing)                                                |
+| **24Q**                           | Quarterly TDS return for salaries                                                        |
+| **PT**                            | Professional Tax (state-level)                                                           |
+| **LWF**                           | Labour Welfare Fund                                                                      |
+| **CLRA**                          | Contract Labour (Regulation and Abolition) Act                                           |
+| **MCA21**                         | Ministry of Corporate Affairs portal for Indian corporate registry                       |
+| **UAN**                           | Universal Account Number (PF identifier)                                                 |
+| **CIN**                           | Corporate Identification Number                                                          |
 
 ---
 
 ## 13 — Approval
 
-| Stage | Approver | Date | Notes |
-|---|---|---|---|
-| Brainstorming | Founder | 2026-04-30 → 2026-05-01 | Approved sections 1-7 + cherries |
-| Design doc | Founder | _pending_ | Review this document |
-| Implementation plan | _pending_ | _pending_ | Created via `superpowers:writing-plans` |
+| Stage               | Approver  | Date                    | Notes                                   |
+| ------------------- | --------- | ----------------------- | --------------------------------------- |
+| Brainstorming       | Founder   | 2026-04-30 → 2026-05-01 | Approved sections 1-7 + cherries        |
+| Design doc          | Founder   | _pending_               | Review this document                    |
+| Implementation plan | _pending_ | _pending_               | Created via `superpowers:writing-plans` |
 
 ---
 
@@ -1823,124 +1830,124 @@ graph TB
 
 ### B.1 — Performance targets
 
-| Metric | Target |
-|---|---|
-| API p50 latency (read) | <100 ms |
-| API p99 latency (read) | <500 ms |
-| API p99 latency (write) | <2 s |
-| Web LCP (Core Web Vital) | <2.5 s (Good) |
-| Web INP (Core Web Vital) | <200 ms (Good) |
-| Mobile cold start | <2 s |
-| Mobile screen render after fetch | <500 ms |
-| Login flow end-to-end | <3 s |
-| Payroll engine throughput | 1,000 employees/min per entity run |
-| ECR generation | 5,000 employees in <5 min |
-| Bulk import | 5,000 employees in <10 min |
-| Outbox dispatch rate | 10,000 events/min sustained |
-| Search query | <300 ms p99 (Meilisearch + pgvector hybrid) |
+| Metric                           | Target                                      |
+| -------------------------------- | ------------------------------------------- |
+| API p50 latency (read)           | <100 ms                                     |
+| API p99 latency (read)           | <500 ms                                     |
+| API p99 latency (write)          | <2 s                                        |
+| Web LCP (Core Web Vital)         | <2.5 s (Good)                               |
+| Web INP (Core Web Vital)         | <200 ms (Good)                              |
+| Mobile cold start                | <2 s                                        |
+| Mobile screen render after fetch | <500 ms                                     |
+| Login flow end-to-end            | <3 s                                        |
+| Payroll engine throughput        | 1,000 employees/min per entity run          |
+| ECR generation                   | 5,000 employees in <5 min                   |
+| Bulk import                      | 5,000 employees in <10 min                  |
+| Outbox dispatch rate             | 10,000 events/min sustained                 |
+| Search query                     | <300 ms p99 (Meilisearch + pgvector hybrid) |
 
 ### B.2 — Scale targets (Phase 1 → 5)
 
-| Dimension | P1 | P3 | P5 |
-|---|---|---|---|
-| Tenants | 10 | 50 | 200-500 |
-| Avg employees per tenant | 100 | 300 | 500 |
-| Total employee records | 1k | 15k | 250k-1M |
-| Concurrent users | 1k | 10k | 50k |
-| Attendance events/day | 10k | 100k | 3M |
-| Payroll lines/run (max) | 5k per entity per period | 5k | 5k |
-| Audit entries | 1M/month | 5M/month | 50M/month |
-| Storage per tenant (avg) | 1 GB | 5 GB | 10 GB |
+| Dimension                | P1                       | P3       | P5        |
+| ------------------------ | ------------------------ | -------- | --------- |
+| Tenants                  | 10                       | 50       | 200-500   |
+| Avg employees per tenant | 100                      | 300      | 500       |
+| Total employee records   | 1k                       | 15k      | 250k-1M   |
+| Concurrent users         | 1k                       | 10k      | 50k       |
+| Attendance events/day    | 10k                      | 100k     | 3M        |
+| Payroll lines/run (max)  | 5k per entity per period | 5k       | 5k        |
+| Audit entries            | 1M/month                 | 5M/month | 50M/month |
+| Storage per tenant (avg) | 1 GB                     | 5 GB     | 10 GB     |
 
 ### B.3 — Availability SLOs
 
-| Tier | Uptime SLO | Error budget/month | RPO | RTO |
-|---|---|---|---|---|
-| Trial | 99.5% | 3h 39m | <5 min | <2h |
-| Standard | 99.9% | 43m 49s | <60s | <30 min |
-| Enterprise | 99.95% | 21m 54s | <60s | <30 min |
+| Tier       | Uptime SLO | Error budget/month | RPO    | RTO     |
+| ---------- | ---------- | ------------------ | ------ | ------- |
+| Trial      | 99.5%      | 3h 39m             | <5 min | <2h     |
+| Standard   | 99.9%      | 43m 49s            | <60s   | <30 min |
+| Enterprise | 99.95%     | 21m 54s            | <60s   | <30 min |
 
 Maintenance windows pre-announced, off-payroll-day, off-fiscal-quarter-end.
 
 ### B.4 — Resource budgets per tenant tier
 
-| Resource | Trial | Standard | Enterprise |
-|---|---|---|---|
-| API requests/min | 60 | 300 | 1,500 |
-| DB queries per request | 30 | 50 | 100 |
-| DB connections | 5 | 10 | 50 |
-| Storage (included) | 1 GB | 10 GB | 100 GB |
-| AI tokens/month | 10k | 100k | 1M |
-| SMS/month | 1k | 10k | 100k |
-| Webhook deliveries/month | 10k | 100k | 1M |
+| Resource                 | Trial | Standard | Enterprise |
+| ------------------------ | ----- | -------- | ---------- |
+| API requests/min         | 60    | 300      | 1,500      |
+| DB queries per request   | 30    | 50       | 100        |
+| DB connections           | 5     | 10       | 50         |
+| Storage (included)       | 1 GB  | 10 GB    | 100 GB     |
+| AI tokens/month          | 10k   | 100k     | 1M         |
+| SMS/month                | 1k    | 10k      | 100k       |
+| Webhook deliveries/month | 10k   | 100k     | 1M         |
 
 ### B.5 — Security NFRs
 
-| Concern | Standard |
-|---|---|
-| Password complexity | NIST 800-63B aligned (12+ chars, no comp rules, breach check) |
-| Session idle timeout | Customer 60 min; admin 30 min |
-| Session max | Customer 8 h; admin 4 h |
-| Failed login lockout | 5 attempts in 15 min → 30-min lockout |
-| MFA mandatory | tenant-admin / finance / payroll-runner / super-admin / support |
-| Refresh token TTL | 30 days, rotated each use |
-| Access token TTL | 15 min |
-| JWT signing key rotation | 30 days |
-| KMS KEK rotation | 365 days |
-| Per-tenant DEK rotation | 90 days |
-| Backup encryption | AES-256, separate KMS keys |
-| TLS minimum | TLS 1.3 external; mTLS internal |
+| Concern                  | Standard                                                        |
+| ------------------------ | --------------------------------------------------------------- |
+| Password complexity      | NIST 800-63B aligned (12+ chars, no comp rules, breach check)   |
+| Session idle timeout     | Customer 60 min; admin 30 min                                   |
+| Session max              | Customer 8 h; admin 4 h                                         |
+| Failed login lockout     | 5 attempts in 15 min → 30-min lockout                           |
+| MFA mandatory            | tenant-admin / finance / payroll-runner / super-admin / support |
+| Refresh token TTL        | 30 days, rotated each use                                       |
+| Access token TTL         | 15 min                                                          |
+| JWT signing key rotation | 30 days                                                         |
+| KMS KEK rotation         | 365 days                                                        |
+| Per-tenant DEK rotation  | 90 days                                                         |
+| Backup encryption        | AES-256, separate KMS keys                                      |
+| TLS minimum              | TLS 1.3 external; mTLS internal                                 |
 
 ### B.6 — Compliance NFRs
 
-| Standard | Status |
-|---|---|
-| DPDPA (India) | Full compliance from P1 launch |
-| SOC 2 Type I | Target 6 months post-launch |
-| SOC 2 Type II | Target 18 months post-launch |
-| ISO 27001 | Target 24 months post-launch |
-| ISO 27701 | Phase 6+ |
-| CERT-In empanelled pen test | Annual from pre-launch |
-| WCAG 2.2 AA | Day-one for web; P8 for mobile |
+| Standard                    | Status                         |
+| --------------------------- | ------------------------------ |
+| DPDPA (India)               | Full compliance from P1 launch |
+| SOC 2 Type I                | Target 6 months post-launch    |
+| SOC 2 Type II               | Target 18 months post-launch   |
+| ISO 27001                   | Target 24 months post-launch   |
+| ISO 27701                   | Phase 6+                       |
+| CERT-In empanelled pen test | Annual from pre-launch         |
+| WCAG 2.2 AA                 | Day-one for web; P8 for mobile |
 
 ---
 
 ## Appendix C — Risk register
 
-| ID | Category | Risk | Likelihood | Impact | Mitigation | Owner |
-|---|---|---|---|---|---|---|
-| S1 | Security | Cross-tenant data leak via missing RLS filter | Low | Catastrophic | RLS + FORCE RLS + per-schema roles + WITH CHECK + nightly authz fuzzing + insider-threat tests | Security |
-| S2 | Security | Encryption key compromise | Low | High | KMS HSM + envelope + per-tenant DEK + quarterly rotation drill (§8.12) | Security |
-| S3 | Security | Audit log tampering | Very Low | Catastrophic | Hash chain + Object Lock + Merkle anchors + DB-trigger layer + pgaudit cross-check | Security |
-| S4 | Security | DDoS / volumetric attack | Medium | High | Cloudflare WAF + Turnstile + tier-based rate limits + per-IP + per-device | Platform |
-| S5 | Security | Insider threat / rogue employee | Low | High | JIT elevation + 2-of-N for prod + audit-on-everything + access reviews + classification redaction | Security |
-| S6 | Security | Supply-chain attack via dep | Medium | High | Snyk + Renovate + osv-scanner + Trivy + SBOM + Cosign signing | Platform |
-| S7 | Security | Phishing / credential theft | Medium | Medium | Passkeys + reuse-detection + step-up + risk scoring | IAM |
-| S8 | Security | Vendor compromise (BGV/e-sign/etc.) | Medium | Medium | Per-vendor secrets + circuit breakers + bulkheads + ACL isolation | Per-module |
-| S9 | Security | Stolen device with active session | Medium | Medium | Biometric unlock + device fingerprint + revoke-on-suspicion + remote logout-all | Mobile |
-| C1 | Compliance | DPDPA non-compliance penalty | Medium | High | DPO console + breach automation + residency enforcement + consent receipts | Compliance |
-| C2 | Compliance | Statutory rule miscalculation | Medium | High | Rules engine + golden masters + property-based tests + compliance review per pack | Compliance |
-| C3 | Compliance | Failed inspection (Factories/PF/IT) | Medium | High | Drift scanner + Inspector mode + Inspection Pack + statutory deadlines + filing tracker | Compliance |
-| C4 | Compliance | Statutory archive lost from disaster | Very Low | Catastrophic | WAL backup + cross-region + Object Lock + quarterly drill | Platform |
-| C5 | Compliance | Long-term loss of historical recomputation | Low | High | Golden master + snapshot rule packs forever | Compliance |
-| C6 | Compliance | POSH / labour-court complaint mishandling | Low | High | POSH portal + statutory timelines + audit-trail + counsel-reviewed templates | Legal |
-| T1 | Technical | DB scaling beyond single Postgres | Medium | Medium | Bitemporal partitioning + per-tenant tablespaces + 1M record headroom | DB |
-| T2 | Technical | Migration breaks prod | Low | High | Expand-contract + shadow-apply + two-person + drift detector | DB |
-| T3 | Technical | Library / framework EoL | Medium | Low | Renovate + version-support matrix + quarterly review | Platform |
-| T4 | Technical | OpenAPI breaking change leaks to clients | Low | Medium | oasdiff in CI + URL versioning + 6-month sunset | API |
-| T5 | Technical | Outbox lag growth | Medium | Medium | Per-tenant backpressure + poison quarantine + monitoring | Platform |
-| T6 | Technical | Hot-path performance regression | Medium | Medium | Performance budgets + nightly benchmarks + traffic replay | Platform |
-| T7 | Technical | Saga compensation incorrectness | Low | High | Property-based saga tests + compensation idempotency + manual review | Per-module |
-| T8 | Technical | AI cost runaway | Medium | Medium | Per-tenant token budget + cost anomaly detection + Qwen fallback | AI |
-| T9 | Technical | Vendor SLA breach affects us | Medium | Medium | Vendor SLA monitoring + circuit breakers + multi-vendor support per category | Per-module |
-| B1 | Business | Slow customer onboarding | High | High | Migration tools + shadow-mode + onboarding wizard + completeness gauge | Customer Success |
-| B2 | Business | Compliance vendor exits market | Low | Medium | ACL pattern + multi-vendor support per category | Compliance |
-| B3 | Business | Customer churn from missed feature | Medium | Medium | Adoption metrics + QBR auto-report + feature flag rings | CS + Product |
-| B4 | Business | Stricter Indian data sovereignty law | Medium | High | Residency enforcement + per-tenant tablespaces + Indian-DC option | Platform |
-| B5 | Business | Big competitor adds compliance moat | Medium | High | Continuous moat-deepening (Notice Responder, Drift Scanner, etc.) | Product |
-| P1 | People | Solo founder burnout | High | Catastrophic | Sustainable cadence + AI assistance + delegation triggers + advisor support | Founder |
-| P2 | People | Inability to hire mid-level Indian Node devs | Low | Low | Stack chosen for Indian talent pool depth | Founder |
-| P3 | People | Knowledge concentration in founder | High | High | ADRs + living docs + dogfooding + recorded decisions + onboarding doc | Founder |
+| ID  | Category   | Risk                                          | Likelihood | Impact       | Mitigation                                                                                        | Owner            |
+| --- | ---------- | --------------------------------------------- | ---------- | ------------ | ------------------------------------------------------------------------------------------------- | ---------------- |
+| S1  | Security   | Cross-tenant data leak via missing RLS filter | Low        | Catastrophic | RLS + FORCE RLS + per-schema roles + WITH CHECK + nightly authz fuzzing + insider-threat tests    | Security         |
+| S2  | Security   | Encryption key compromise                     | Low        | High         | KMS HSM + envelope + per-tenant DEK + quarterly rotation drill (§8.12)                            | Security         |
+| S3  | Security   | Audit log tampering                           | Very Low   | Catastrophic | Hash chain + Object Lock + Merkle anchors + DB-trigger layer + pgaudit cross-check                | Security         |
+| S4  | Security   | DDoS / volumetric attack                      | Medium     | High         | Cloudflare WAF + Turnstile + tier-based rate limits + per-IP + per-device                         | Platform         |
+| S5  | Security   | Insider threat / rogue employee               | Low        | High         | JIT elevation + 2-of-N for prod + audit-on-everything + access reviews + classification redaction | Security         |
+| S6  | Security   | Supply-chain attack via dep                   | Medium     | High         | Snyk + Renovate + osv-scanner + Trivy + SBOM + Cosign signing                                     | Platform         |
+| S7  | Security   | Phishing / credential theft                   | Medium     | Medium       | Passkeys + reuse-detection + step-up + risk scoring                                               | IAM              |
+| S8  | Security   | Vendor compromise (BGV/e-sign/etc.)           | Medium     | Medium       | Per-vendor secrets + circuit breakers + bulkheads + ACL isolation                                 | Per-module       |
+| S9  | Security   | Stolen device with active session             | Medium     | Medium       | Biometric unlock + device fingerprint + revoke-on-suspicion + remote logout-all                   | Mobile           |
+| C1  | Compliance | DPDPA non-compliance penalty                  | Medium     | High         | DPO console + breach automation + residency enforcement + consent receipts                        | Compliance       |
+| C2  | Compliance | Statutory rule miscalculation                 | Medium     | High         | Rules engine + golden masters + property-based tests + compliance review per pack                 | Compliance       |
+| C3  | Compliance | Failed inspection (Factories/PF/IT)           | Medium     | High         | Drift scanner + Inspector mode + Inspection Pack + statutory deadlines + filing tracker           | Compliance       |
+| C4  | Compliance | Statutory archive lost from disaster          | Very Low   | Catastrophic | WAL backup + cross-region + Object Lock + quarterly drill                                         | Platform         |
+| C5  | Compliance | Long-term loss of historical recomputation    | Low        | High         | Golden master + snapshot rule packs forever                                                       | Compliance       |
+| C6  | Compliance | POSH / labour-court complaint mishandling     | Low        | High         | POSH portal + statutory timelines + audit-trail + counsel-reviewed templates                      | Legal            |
+| T1  | Technical  | DB scaling beyond single Postgres             | Medium     | Medium       | Bitemporal partitioning + per-tenant tablespaces + 1M record headroom                             | DB               |
+| T2  | Technical  | Migration breaks prod                         | Low        | High         | Expand-contract + shadow-apply + two-person + drift detector                                      | DB               |
+| T3  | Technical  | Library / framework EoL                       | Medium     | Low          | Renovate + version-support matrix + quarterly review                                              | Platform         |
+| T4  | Technical  | OpenAPI breaking change leaks to clients      | Low        | Medium       | oasdiff in CI + URL versioning + 6-month sunset                                                   | API              |
+| T5  | Technical  | Outbox lag growth                             | Medium     | Medium       | Per-tenant backpressure + poison quarantine + monitoring                                          | Platform         |
+| T6  | Technical  | Hot-path performance regression               | Medium     | Medium       | Performance budgets + nightly benchmarks + traffic replay                                         | Platform         |
+| T7  | Technical  | Saga compensation incorrectness               | Low        | High         | Property-based saga tests + compensation idempotency + manual review                              | Per-module       |
+| T8  | Technical  | AI cost runaway                               | Medium     | Medium       | Per-tenant token budget + cost anomaly detection + Qwen fallback                                  | AI               |
+| T9  | Technical  | Vendor SLA breach affects us                  | Medium     | Medium       | Vendor SLA monitoring + circuit breakers + multi-vendor support per category                      | Per-module       |
+| B1  | Business   | Slow customer onboarding                      | High       | High         | Migration tools + shadow-mode + onboarding wizard + completeness gauge                            | Customer Success |
+| B2  | Business   | Compliance vendor exits market                | Low        | Medium       | ACL pattern + multi-vendor support per category                                                   | Compliance       |
+| B3  | Business   | Customer churn from missed feature            | Medium     | Medium       | Adoption metrics + QBR auto-report + feature flag rings                                           | CS + Product     |
+| B4  | Business   | Stricter Indian data sovereignty law          | Medium     | High         | Residency enforcement + per-tenant tablespaces + Indian-DC option                                 | Platform         |
+| B5  | Business   | Big competitor adds compliance moat           | Medium     | High         | Continuous moat-deepening (Notice Responder, Drift Scanner, etc.)                                 | Product          |
+| P1  | People     | Solo founder burnout                          | High       | Catastrophic | Sustainable cadence + AI assistance + delegation triggers + advisor support                       | Founder          |
+| P2  | People     | Inability to hire mid-level Indian Node devs  | Low        | Low          | Stack chosen for Indian talent pool depth                                                         | Founder          |
+| P3  | People     | Knowledge concentration in founder            | High       | High         | ADRs + living docs + dogfooding + recorded decisions + onboarding doc                             | Founder          |
 
 Reviewed quarterly; risks added/closed/re-rated with rationale.
 
@@ -1950,21 +1957,21 @@ Reviewed quarterly; risks added/closed/re-rated with rationale.
 
 ### D.1 — Caching strategy (Redis use cases)
 
-| Cache | TTL | Invalidation | Notes |
-|---|---|---|---|
-| Sessions | sliding 60 min | on logout / role change | hash + per-user list of active sessions |
-| Rate limit counters | 60 s windows | natural expiry | token bucket, per-tier |
-| Idempotency keys | 24 h | natural expiry | scoped per-tenant |
-| Feature flags per tenant | 60 s | on toggle (pub/sub invalidate) | hot path |
-| JWKS | 1 h | on key rotation (pub/sub) | crypto |
-| Authz effective permissions | 60 s | on role change | per-user materialized |
-| Tenant config | 60 s | on update (pub/sub) | per-tenant hash |
-| Statutory rule pack (decoded) | 1 h | on rule pack publish | versioned key |
-| Decryption DEKs | 1 h | on rotation | AEAD-decrypted, in-memory only |
-| OpenAPI capability resolver | 60 s | on permission change | per-user |
-| Tenant-feature flag resolution | 60 s | per F flag toggle | per-tenant + per-user merge |
-| BullMQ queue state | persistent | n/a | BullMQ-managed |
-| Distributed locks (Redlock) | per-lock TTL | natural / explicit release | fenced tokens |
+| Cache                          | TTL            | Invalidation                   | Notes                                   |
+| ------------------------------ | -------------- | ------------------------------ | --------------------------------------- |
+| Sessions                       | sliding 60 min | on logout / role change        | hash + per-user list of active sessions |
+| Rate limit counters            | 60 s windows   | natural expiry                 | token bucket, per-tier                  |
+| Idempotency keys               | 24 h           | natural expiry                 | scoped per-tenant                       |
+| Feature flags per tenant       | 60 s           | on toggle (pub/sub invalidate) | hot path                                |
+| JWKS                           | 1 h            | on key rotation (pub/sub)      | crypto                                  |
+| Authz effective permissions    | 60 s           | on role change                 | per-user materialized                   |
+| Tenant config                  | 60 s           | on update (pub/sub)            | per-tenant hash                         |
+| Statutory rule pack (decoded)  | 1 h            | on rule pack publish           | versioned key                           |
+| Decryption DEKs                | 1 h            | on rotation                    | AEAD-decrypted, in-memory only          |
+| OpenAPI capability resolver    | 60 s           | on permission change           | per-user                                |
+| Tenant-feature flag resolution | 60 s           | per F flag toggle              | per-tenant + per-user merge             |
+| BullMQ queue state             | persistent     | n/a                            | BullMQ-managed                          |
+| Distributed locks (Redlock)    | per-lock TTL   | natural / explicit release     | fenced tokens                           |
 
 ### D.2 — Search architecture
 
@@ -2000,24 +2007,24 @@ AiAdapter (in infrastructure/acl/ai/)
 
 ### D.4 — AI use case → model mapping
 
-| Use case | Model | Pattern | Cost class |
-|---|---|---|---|
-| Conversational policy Q&A | Claude Haiku | RAG with policy docs + cited sources | Low |
-| Payroll variance explainer | Claude Sonnet | Structured input → narrative output | Medium |
-| Notice Responder | Claude Opus / Sonnet | Long-context PDF + citation extraction | High |
-| Resume screening (filter) | Claude Haiku | Bulk classify | Low |
-| Resume ranking | Claude Sonnet | Pairwise compare against JD | Medium |
-| Document classification | Local Qwen | Routine inference | ~Free |
-| Email-to-ticket classification | Local Qwen | Routine inference | ~Free |
-| OCR ambiguous case | Claude vision | Multi-modal | Medium |
-| OCR routine case | Tesseract | Local | Free |
-| Pulse summary | Claude Haiku | Anonymous aggregation | Low |
-| Calibration bias detection | Statistical + Claude review | Hybrid | Medium |
-| Holiday optimization | Programmatic | No AI | Free |
-| Sandwich rule | Programmatic | No AI | Free |
-| Salary insight per payslip | Claude Haiku | Structured + cached prompt | Low |
-| Career path explorer | pgvector + Claude Haiku | RAG over org skills graph | Low |
-| Smart Reply suggestions | Local Qwen | Routine inference | ~Free |
+| Use case                       | Model                       | Pattern                                | Cost class |
+| ------------------------------ | --------------------------- | -------------------------------------- | ---------- |
+| Conversational policy Q&A      | Claude Haiku                | RAG with policy docs + cited sources   | Low        |
+| Payroll variance explainer     | Claude Sonnet               | Structured input → narrative output    | Medium     |
+| Notice Responder               | Claude Opus / Sonnet        | Long-context PDF + citation extraction | High       |
+| Resume screening (filter)      | Claude Haiku                | Bulk classify                          | Low        |
+| Resume ranking                 | Claude Sonnet               | Pairwise compare against JD            | Medium     |
+| Document classification        | Local Qwen                  | Routine inference                      | ~Free      |
+| Email-to-ticket classification | Local Qwen                  | Routine inference                      | ~Free      |
+| OCR ambiguous case             | Claude vision               | Multi-modal                            | Medium     |
+| OCR routine case               | Tesseract                   | Local                                  | Free       |
+| Pulse summary                  | Claude Haiku                | Anonymous aggregation                  | Low        |
+| Calibration bias detection     | Statistical + Claude review | Hybrid                                 | Medium     |
+| Holiday optimization           | Programmatic                | No AI                                  | Free       |
+| Sandwich rule                  | Programmatic                | No AI                                  | Free       |
+| Salary insight per payslip     | Claude Haiku                | Structured + cached prompt             | Low        |
+| Career path explorer           | pgvector + Claude Haiku     | RAG over org skills graph              | Low        |
+| Smart Reply suggestions        | Local Qwen                  | Routine inference                      | ~Free      |
 
 ### D.5 — AI safety guards
 
@@ -2040,13 +2047,13 @@ URL-based: `/v1/...`, `/v2/...`. **Sunset header** (RFC 8594) on deprecated endp
 
 ### E.2 — HTTP methods
 
-| Method | Purpose | Idempotent | Cacheable |
-|---|---|---|---|
-| GET | read | yes | yes (with ETag) |
-| POST | create or non-idempotent action | no (Idempotency-Key required) | no |
-| PATCH | partial update | no (If-Match required) | no |
-| PUT | full replace (rare) | yes (If-Match required) | no |
-| DELETE | soft delete | yes | no |
+| Method | Purpose                         | Idempotent                    | Cacheable       |
+| ------ | ------------------------------- | ----------------------------- | --------------- |
+| GET    | read                            | yes                           | yes (with ETag) |
+| POST   | create or non-idempotent action | no (Idempotency-Key required) | no              |
+| PATCH  | partial update                  | no (If-Match required)        | no              |
+| PUT    | full replace (rare)             | yes (If-Match required)       | no              |
+| DELETE | soft delete                     | yes                           | no              |
 
 ### E.3 — Pagination
 
@@ -2104,7 +2111,7 @@ GET /v1/employees?sort=-joined_at,name
   "code": "employee.kyc.pan_invalid",
   "instance": "/v1/employees/abc/kyc",
   "request_id": "req_abc123",
-  "context": {"field": "pan"}
+  "context": { "field": "pan" }
 }
 ```
 
@@ -2148,32 +2155,32 @@ Server-Sent Events (SSE) preferred over WebSockets for one-way streams (notifica
 
 ## Appendix F — Data retention matrix
 
-| Data type | Hot retention | Cold retention | Reason | After cold |
-|---|---|---|---|---|
-| Tenant business records | active + 90d post-cancel | 7 years | IT Act § 44AA | DPDPA hard delete |
-| Employee master | active + 90d post-exit | 7 years | IT Act + Labour | anonymize per DPDPA |
-| Employee KYC docs | active | 7 years post-exit | KYC + IT | hard delete |
-| Payslips | 5 years online | 7 years archive | IT Act § 209 | hard delete |
-| Salary structures | versioned forever | n/a | retros | n/a |
-| PF / ESI / Form 16 / 24Q files | 5 years online | 7 years Object Lock | EPFO/ESIC/IT statutory | regulator review then delete |
-| Audit log | 90 days hot | 7 years Object Lock | SOC2 + DPDPA | regulator review then delete |
-| Application logs | 30 days | 1 year archived | debugging | delete |
-| OTel traces | 7 days | 30 days archived | debugging | delete |
-| Metrics | 1 year online | 3 years rolled up | trend | delete |
-| Sentry errors | 90 days | 1 year archived | trend | delete |
-| Backup snapshots | continuous WAL + 30d full | 1 year monthly + 7y statutory | DR + audit | delete |
-| Email/SMS/push delivery records | 90 days | 1 year archive | dispute resolution | delete |
-| Webhook delivery records | 30 days | 90 days | debugging | delete |
-| Idempotency keys | 24 hours | n/a | dedup window | natural expiry |
-| Sessions | until expiry | 30 days post-revoke | forensics | delete |
-| Rate limit counters | minutes | n/a | sliding window | natural expiry |
-| Forensic snapshots | until investigation closes | 7 years per declaration | regulatory | delete or extend |
-| Tokenization vault | aligned with main entity retention | aligned | encryption | tokens deleted with data |
-| Recruitment data — rejected | 1 year | 2 years | rehire / compliance | DPDPA delete on request |
-| Recruitment data — hired | becomes employee data | aligned | n/a | n/a |
-| Performance reviews | 7 years | aligned | dispute / IT | delete |
-| Compliance evidence | 1 year hot | 7 years Object Lock | audit | delete or extend |
-| Vendor records / DPAs | active + 7 years post-termination | aligned | contract | delete |
+| Data type                       | Hot retention                      | Cold retention                | Reason                 | After cold                   |
+| ------------------------------- | ---------------------------------- | ----------------------------- | ---------------------- | ---------------------------- |
+| Tenant business records         | active + 90d post-cancel           | 7 years                       | IT Act § 44AA          | DPDPA hard delete            |
+| Employee master                 | active + 90d post-exit             | 7 years                       | IT Act + Labour        | anonymize per DPDPA          |
+| Employee KYC docs               | active                             | 7 years post-exit             | KYC + IT               | hard delete                  |
+| Payslips                        | 5 years online                     | 7 years archive               | IT Act § 209           | hard delete                  |
+| Salary structures               | versioned forever                  | n/a                           | retros                 | n/a                          |
+| PF / ESI / Form 16 / 24Q files  | 5 years online                     | 7 years Object Lock           | EPFO/ESIC/IT statutory | regulator review then delete |
+| Audit log                       | 90 days hot                        | 7 years Object Lock           | SOC2 + DPDPA           | regulator review then delete |
+| Application logs                | 30 days                            | 1 year archived               | debugging              | delete                       |
+| OTel traces                     | 7 days                             | 30 days archived              | debugging              | delete                       |
+| Metrics                         | 1 year online                      | 3 years rolled up             | trend                  | delete                       |
+| Sentry errors                   | 90 days                            | 1 year archived               | trend                  | delete                       |
+| Backup snapshots                | continuous WAL + 30d full          | 1 year monthly + 7y statutory | DR + audit             | delete                       |
+| Email/SMS/push delivery records | 90 days                            | 1 year archive                | dispute resolution     | delete                       |
+| Webhook delivery records        | 30 days                            | 90 days                       | debugging              | delete                       |
+| Idempotency keys                | 24 hours                           | n/a                           | dedup window           | natural expiry               |
+| Sessions                        | until expiry                       | 30 days post-revoke           | forensics              | delete                       |
+| Rate limit counters             | minutes                            | n/a                           | sliding window         | natural expiry               |
+| Forensic snapshots              | until investigation closes         | 7 years per declaration       | regulatory             | delete or extend             |
+| Tokenization vault              | aligned with main entity retention | aligned                       | encryption             | tokens deleted with data     |
+| Recruitment data — rejected     | 1 year                             | 2 years                       | rehire / compliance    | DPDPA delete on request      |
+| Recruitment data — hired        | becomes employee data              | aligned                       | n/a                    | n/a                          |
+| Performance reviews             | 7 years                            | aligned                       | dispute / IT           | delete                       |
+| Compliance evidence             | 1 year hot                         | 7 years Object Lock           | audit                  | delete or extend             |
+| Vendor records / DPAs           | active + 7 years post-termination  | aligned                       | contract               | delete                       |
 
 ---
 
@@ -2181,38 +2188,38 @@ Server-Sent Events (SSE) preferred over WebSockets for one-way streams (notifica
 
 ### G.1 — Compliance certification roadmap
 
-| Certification | Scope | Target start | Target completion | Auditor |
-|---|---|---|---|---|
-| DPDPA self-attestation | Full platform | Phase 1 | Phase 1 launch | Internal + external counsel review |
-| SOC 2 Type I | Trust principles (security, availability, confidentiality) | 3 months post-launch | 6 months post-launch | Big-4 or AICPA-member firm |
-| SOC 2 Type II | Above, 6-month observation | 6 months post-launch | 12-18 months | Same auditor |
-| ISO 27001 | ISMS | 12 months post-launch | 18-24 months | Accredited (BSI / DNV / BV) |
-| ISO 27701 | Privacy extension | 24 months post-launch | 30 months | Same auditor |
-| CERT-In empanelled pen test | Annual | Pre-launch | Annual | CERT-In list |
-| ISO 22301 (BCM) | Phase 6+ if enterprise tier demands | TBD | TBD | optional |
-| RBI cyber security framework | Banking tenant onboarding | per-tenant attest | optional | optional |
+| Certification                | Scope                                                      | Target start          | Target completion    | Auditor                            |
+| ---------------------------- | ---------------------------------------------------------- | --------------------- | -------------------- | ---------------------------------- |
+| DPDPA self-attestation       | Full platform                                              | Phase 1               | Phase 1 launch       | Internal + external counsel review |
+| SOC 2 Type I                 | Trust principles (security, availability, confidentiality) | 3 months post-launch  | 6 months post-launch | Big-4 or AICPA-member firm         |
+| SOC 2 Type II                | Above, 6-month observation                                 | 6 months post-launch  | 12-18 months         | Same auditor                       |
+| ISO 27001                    | ISMS                                                       | 12 months post-launch | 18-24 months         | Accredited (BSI / DNV / BV)        |
+| ISO 27701                    | Privacy extension                                          | 24 months post-launch | 30 months            | Same auditor                       |
+| CERT-In empanelled pen test  | Annual                                                     | Pre-launch            | Annual               | CERT-In list                       |
+| ISO 22301 (BCM)              | Phase 6+ if enterprise tier demands                        | TBD                   | TBD                  | optional                           |
+| RBI cyber security framework | Banking tenant onboarding                                  | per-tenant attest     | optional             | optional                           |
 
 ### G.2 — Disaster recovery RTO/RPO targets
 
-| Scenario | RTO | RPO | Drill cadence |
-|---|---|---|---|
-| Primary region failure | <30 min | <60 s | every 6 months |
-| Database corruption | <2 h | <60 s (PITR) | quarterly |
-| Application bug | <30 min (rollback) | 0 (forward-only) | continuous (every release) |
-| KMS / Vault unavailable | <15 min (cached secrets) | 0 | bi-annual |
-| R2 / storage unavailable | <30 min (degraded mode) | <5 min lag | continuous (graceful degradation) |
-| Confidential data exfiltration | <72 h breach notification | n/a | annual game day |
-| Ransomware | <4 h (clean restore) | <60 s | annual |
-| Vendor outage (BGV, e-sign, FCM) | <15 min (circuit-break + queue) | n/a | continuous |
+| Scenario                         | RTO                             | RPO              | Drill cadence                     |
+| -------------------------------- | ------------------------------- | ---------------- | --------------------------------- |
+| Primary region failure           | <30 min                         | <60 s            | every 6 months                    |
+| Database corruption              | <2 h                            | <60 s (PITR)     | quarterly                         |
+| Application bug                  | <30 min (rollback)              | 0 (forward-only) | continuous (every release)        |
+| KMS / Vault unavailable          | <15 min (cached secrets)        | 0                | bi-annual                         |
+| R2 / storage unavailable         | <30 min (degraded mode)         | <5 min lag       | continuous (graceful degradation) |
+| Confidential data exfiltration   | <72 h breach notification       | n/a              | annual game day                   |
+| Ransomware                       | <4 h (clean restore)            | <60 s            | annual                            |
+| Vendor outage (BGV, e-sign, FCM) | <15 min (circuit-break + queue) | n/a              | continuous                        |
 
 ### G.3 — Incident severity matrix
 
-| Severity | Definition | Response time | Communication |
-|---|---|---|---|
-| **SEV1** | Multi-tenant outage; data integrity issue; security breach | 15 min | Public status page within 30 min; CEO + ad hoc team |
-| **SEV2** | Single-tenant outage; major feature broken; significant data loss limited scope | 1 h | Tenant comms within 1 h |
-| **SEV3** | Single feature degraded; workaround exists; localized impact | 4 h | Status page within 4 h |
-| **SEV4** | Cosmetic / minor / non-impacting | next business day | release notes |
+| Severity | Definition                                                                      | Response time     | Communication                                       |
+| -------- | ------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
+| **SEV1** | Multi-tenant outage; data integrity issue; security breach                      | 15 min            | Public status page within 30 min; CEO + ad hoc team |
+| **SEV2** | Single-tenant outage; major feature broken; significant data loss limited scope | 1 h               | Tenant comms within 1 h                             |
+| **SEV3** | Single feature degraded; workaround exists; localized impact                    | 4 h               | Status page within 4 h                              |
+| **SEV4** | Cosmetic / minor / non-impacting                                                | next business day | release notes                                       |
 
 ### G.4 — Post-incident process
 
@@ -2268,21 +2275,21 @@ Ready:
 
 ### H.4 — Dev tools shipped
 
-| Command | Purpose |
-|---|---|
-| `pnpm db:doctor` | Run all DB self-checks |
-| `pnpm system:doctor` | Run every layer's doctor |
-| `pnpm arch:report` | Generate architecture docs |
-| `pnpm test:unit` | Vitest unit tests |
-| `pnpm test:property` | fast-check property-based suite |
-| `pnpm test:contract` | Adapter contract tests against testcontainers |
-| `pnpm test:integration` | Integration tests |
-| `pnpm test:e2e` | Playwright E2E (web) |
-| `pnpm test:golden` | Replay golden-master payroll runs |
-| `pnpm test:mutation` | Stryker on changed files |
-| `pnpm test:replay` | Production traffic replay (against staging) |
-| `pnpm release:certificate` | Generate release cert locally for review |
-| `pnpm policy:dry-run` | Simulate authz policy change against last 30 days |
+| Command                    | Purpose                                           |
+| -------------------------- | ------------------------------------------------- |
+| `pnpm db:doctor`           | Run all DB self-checks                            |
+| `pnpm system:doctor`       | Run every layer's doctor                          |
+| `pnpm arch:report`         | Generate architecture docs                        |
+| `pnpm test:unit`           | Vitest unit tests                                 |
+| `pnpm test:property`       | fast-check property-based suite                   |
+| `pnpm test:contract`       | Adapter contract tests against testcontainers     |
+| `pnpm test:integration`    | Integration tests                                 |
+| `pnpm test:e2e`            | Playwright E2E (web)                              |
+| `pnpm test:golden`         | Replay golden-master payroll runs                 |
+| `pnpm test:mutation`       | Stryker on changed files                          |
+| `pnpm test:replay`         | Production traffic replay (against staging)       |
+| `pnpm release:certificate` | Generate release cert locally for review          |
+| `pnpm policy:dry-run`      | Simulate authz policy change against last 30 days |
 
 ### H.5 — Editor config
 
@@ -2301,4 +2308,4 @@ Ready:
 
 ---
 
-*End of design document.*
+_End of design document._

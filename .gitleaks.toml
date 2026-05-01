@@ -1,0 +1,12 @@
+title = "HRMS gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Files we trust to contain pseudo-secrets (test fixtures, samples)"
+paths = [
+  '''(?i).*\.example\.(env|json)$''',
+  '''(?i)docs/.*''',
+  '''(?i)spec/.*''',
+]

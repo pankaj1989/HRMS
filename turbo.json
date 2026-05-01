@@ -5,14 +5,30 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"],
-      "inputs": ["src/**", "app/**", "tsconfig*.json", "package.json", "next.config.*", "nest-cli.json"]
+      "inputs": [
+        "src/**",
+        "app/**",
+        "tsconfig*.json",
+        "package.json",
+        "next.config.*",
+        "nest-cli.json"
+      ]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "lint": {
-      "inputs": ["src/**", "app/**", "test/**", "tests/**", "eslint.config.*", ".eslintrc*", "package.json", "tsconfig*.json"]
+      "inputs": [
+        "src/**",
+        "app/**",
+        "test/**",
+        "tests/**",
+        "eslint.config.*",
+        ".eslintrc*",
+        "package.json",
+        "tsconfig*.json"
+      ]
     },
     "type": {
       "dependsOn": ["^build"],
@@ -22,16 +38,39 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "test/**", "tests/**", "vitest.config.*", "jest.config.*", "package.json"]
+      "inputs": [
+        "src/**",
+        "test/**",
+        "tests/**",
+        "vitest.config.*",
+        "jest.config.*",
+        "package.json"
+      ]
     },
     "test:unit": {
       "outputs": ["coverage/**"],
-      "inputs": ["src/**", "test/**", "tests/**", "vitest.config.*", "jest.config.*", "package.json"]
+      "inputs": [
+        "src/**",
+        "test/**",
+        "tests/**",
+        "vitest.config.*",
+        "jest.config.*",
+        "package.json"
+      ]
     },
     "test:e2e": {
       "dependsOn": ["build"],
       "outputs": ["playwright-report/**", "test-results/**"],
-      "inputs": ["src/**", "app/**", "e2e/**", "test/**", "tests/**", "playwright.config.*", "jest-e2e.json", "package.json"]
+      "inputs": [
+        "src/**",
+        "app/**",
+        "e2e/**",
+        "test/**",
+        "tests/**",
+        "playwright.config.*",
+        "jest-e2e.json",
+        "package.json"
+      ]
     },
     "clean": {
       "cache": false
