@@ -1,0 +1,15 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "id": "00000000-0000-0000-0000-000000000001",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {},
+  "enums": {},
+  "schemas": {
+    "audit": "audit",
+    "platform": "platform",
+    "demo": "demo"
+  },
+  "sequences": {},
+  "_meta": { "columns": {}, "schemas": {}, "tables": {} }
+}

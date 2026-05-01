@@ -3,8 +3,8 @@
 Indian compliance-first multi-tenant HR platform — modular monolith on
 NestJS + Next.js + Flutter, backed by PostgreSQL with Row-Level Security.
 
-> Phase 1.0 (monorepo bootstrap) is **in progress**. See
-> [`docs/superpowers/plans/2026-05-01-p1.0-monorepo-bootstrap.md`](./docs/superpowers/plans/2026-05-01-p1.0-monorepo-bootstrap.md).
+> Phase 1.0 (monorepo bootstrap) and Phase 1.1 (database foundations) **complete**. See
+> [`docs/superpowers/plans/`](./docs/superpowers/plans/).
 
 ## Get started in 5 minutes
 
@@ -42,6 +42,7 @@ URLs after `pnpm dev`:
 - **[Architecture design](./docs/superpowers/specs/2026-05-01-hrms-architecture-design.md)** — the full system design (~17k words; sections 1-13 + appendices A-H)
 - **[ADRs](./docs/adr/)** — every "why" lives here
 - **[Onboarding](./docs/dev/onboarding.md)** — first-day checklist
+- **[Database workflow](./docs/dev/database.md)** — db:\* commands, RLS pattern, audit chain
 - **[Troubleshooting](./docs/dev/troubleshooting.md)** — common issues + fixes
 - **[Specs](./spec/)** — original 10-module functional spec
 - **[Plans](./docs/superpowers/plans/)** — implementation plans, one per sub-phase

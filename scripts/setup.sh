@@ -53,6 +53,16 @@ step "Building all packages"
 pnpm build
 ok "build green"
 
+step "Running database migrations"
+DATABASE_URL='postgres://hrms:hrms_dev_password@localhost:5433/hrms' \
+  pnpm --filter @hrms/db db:migrate
+ok "migrations applied"
+
+step "Running db:doctor"
+DATABASE_URL='postgres://hrms:hrms_dev_password@localhost:5433/hrms' \
+  pnpm --filter @hrms/db db:doctor
+ok "db:doctor green"
+
 step "Setup complete"
 cat <<'EOF'
 

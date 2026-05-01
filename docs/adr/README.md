@@ -15,5 +15,6 @@ collaborators, and auditors.
 
 - [0001 — Modular monolith over microservices](./0001-modular-monolith.md)
 - [0002 — Postgres with RLS over Mongo](./0002-postgres-with-rls.md)
+- [0003 — Drizzle ORM over Prisma / Kysely / TypeORM](./0003-drizzle-orm-choice.md)
 
 Add new ADRs by copying [`_template.md`](./_template.md).
