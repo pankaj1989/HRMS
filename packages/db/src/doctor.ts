@@ -14,7 +14,7 @@ export interface DoctorReport {
 
 const REQUIRED_EXTENSIONS = ['pgcrypto', 'btree_gist', 'pg_trgm'] as const;
 const REQUIRED_SCHEMAS = ['platform', 'audit', 'demo'] as const;
-const MULTITENANT_TABLES: ReadonlyArray<{ schema: string; table: string }> = [
+const MULTITENANT_TABLES: readonly { schema: string; table: string }[] = [
   { schema: 'demo', table: 'tenant_data' },
   { schema: 'demo', table: 'compensation' },
   { schema: 'audit', table: 'entries' },

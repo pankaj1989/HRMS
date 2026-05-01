@@ -33,7 +33,7 @@ export function createClient(envSource?: Partial<DbEnv>): DbClient {
       query: string,
       params?: unknown[],
     ) {
-      const r = await pool.query<Row>(query, params as unknown[]);
+      const r = await pool.query<Row>(query, params);
       return { rows: r.rows };
     },
     async close() {
