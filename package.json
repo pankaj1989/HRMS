@@ -35,6 +35,9 @@
     "docker:up": "docker compose -f infra/docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f infra/docker/docker-compose.yml down",
     "docker:logs": "docker compose -f infra/docker/docker-compose.yml logs -f",
+    "db:migrate": "pnpm --filter @hrms/db db:migrate",
+    "db:doctor": "pnpm --filter @hrms/db db:doctor",
+    "db:generate": "pnpm --filter @hrms/db db:generate",
     "prepare": "husky"
   },
   "devDependencies": {
