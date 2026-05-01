@@ -25,6 +25,8 @@ export async function startPostgres(): Promise<RunningPg> {
   return {
     container,
     url: container.getConnectionUri(),
-    stop: () => container.stop({ remove: true, removeVolumes: true }),
+    stop: async () => {
+      await container.stop({ remove: true, removeVolumes: true });
+    },
   };
 }
