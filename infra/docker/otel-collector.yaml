@@ -1,0 +1,53 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  attributes/redact-pii:
+    actions:
+      - key: pan
+        action: delete
+      - key: aadhaar
+        action: delete
+      - key: bank_account
+        action: delete
+      - key: salary
+        action: delete
+      - key: dob
+        action: delete
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+exporters:
+  otlp/jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+  debug:
+    verbosity: basic
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [attributes/redact-pii, batch]
+      exporters: [otlp/jaeger, debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [attributes/redact-pii, batch]
+      exporters: [debug]

@@ -1,0 +1,132 @@
+name: hrms-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hrms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hrms
+      POSTGRES_PASSWORD: hrms_dev_password
+      POSTGRES_DB: hrms
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hrms -d hrms']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: hrms-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    container_name: hrms-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: hrms_dev_meili_master_key
+      MEILI_NO_ANALYTICS: 'true'
+      MEILI_ENV: development
+    ports:
+      - '7700:7700'
+    volumes:
+      - meilisearch-data:/meili_data
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:7700/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: hrms-mailpit
+    restart: unless-stopped
+    ports:
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
+    environment:
+      MP_MAX_MESSAGES: '5000'
+      MP_DATABASE: /data/mailpit.db
+    volumes:
+      - mailpit-data:/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: hrms-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: hrms_dev
+      MINIO_ROOT_PASSWORD: hrms_dev_minio_password
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  clamav:
+    image: clamav/clamav:1.4
+    platform: linux/amd64
+    container_name: hrms-clamav
+    restart: unless-stopped
+    ports:
+      - '3310:3310'
+    volumes:
+      - clamav-data:/var/lib/clamav
+    healthcheck:
+      test: ['CMD', 'clamdcheck.sh']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.110.0
+    container_name: hrms-otel-collector
+    restart: unless-stopped
+    command: ['--config=/etc/otel-collector.yaml']
+    volumes:
+      - ./otel-collector.yaml:/etc/otel-collector.yaml:ro
+    ports:
+      - '4317:4317' # gRPC
+      - '4318:4318' # HTTP
+      - '13133:13133' # health check
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62.0
+    container_name: hrms-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: 'true'
+    ports:
+      - '16686:16686' # UI
+      - '14250:14250' # Collector
+
+volumes:
+  postgres-data:
+  redis-data:
+  meilisearch-data:
+  mailpit-data:
+  minio-data:
+  clamav-data:
