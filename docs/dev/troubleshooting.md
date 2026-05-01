@@ -1,6 +1,6 @@
 # Troubleshooting
 
-## `pnpm setup` fails
+## `pnpm bootstrap` fails
 
 ### Error: `docker info` exits non-zero
 

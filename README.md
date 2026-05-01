@@ -16,7 +16,7 @@ cd hrms
 node -v && pnpm -v && docker info
 
 # Bootstrap everything
-pnpm setup
+pnpm bootstrap
 
 # Verify
 pnpm verify

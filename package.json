@@ -29,7 +29,7 @@
     "test:unit": "turbo run test:unit",
     "test:e2e": "turbo run test:e2e",
     "clean": "turbo run clean && rm -rf node_modules",
-    "setup": "bash scripts/setup.sh",
+    "bootstrap": "bash scripts/setup.sh",
     "verify": "bash scripts/verify-setup.sh",
     "dev:reset": "bash scripts/dev-reset.sh",
     "docker:up": "docker compose -f infra/docker/docker-compose.yml up -d",

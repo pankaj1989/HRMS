@@ -23,11 +23,11 @@ git config --global user.email "you@example.com"
 ```bash
 git clone <repo-url> hrms
 cd hrms
-pnpm setup        # installs deps, starts docker, builds
+pnpm bootstrap    # installs deps, starts docker, builds
 pnpm verify       # smoke test
 ```
 
-If `pnpm setup` fails, see [troubleshooting](./troubleshooting.md).
+If `pnpm bootstrap` fails, see [troubleshooting](./troubleshooting.md).
 
 ## 3. Daily workflow
 
