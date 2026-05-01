@@ -64,8 +64,8 @@ Ready:
   Meilisearch:http://localhost:7700
   MinIO:      http://localhost:9001   (root: hrms_dev / hrms_dev_minio_password)
   Jaeger:     http://localhost:16686
-  Postgres:   postgres://hrms:hrms_dev_password@localhost:5432/hrms
-  Redis:      redis://localhost:6379
+  Postgres:   postgres://hrms:hrms_dev_password@localhost:5433/hrms
+  Redis:      redis://localhost:6380
 
 Run `pnpm dev` to start everything in parallel.
 
